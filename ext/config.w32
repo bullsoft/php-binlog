@@ -1,0 +1,13 @@
+// $Id$
+// vim:ft=javascript
+
+// If your extension references something external, use ARG_WITH
+// ARG_WITH("mysql_binlog", "for mysql_binlog support", "no");
+
+// Otherwise, use ARG_ENABLE
+// ARG_ENABLE("mysql_binlog", "enable mysql_binlog support", "no");
+
+if (PHP_MYSQL_BINLOG != "no") {
+	EXTENSION("mysql_binlog", "mysql_binlog.c");
+}
+
