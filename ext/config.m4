@@ -5,13 +5,16 @@ dnl Comments in this file start with the string 'dnl'.
 dnl Remove where necessary. This file will not work
 dnl without editing.
 
+PHP_ARG_ENABLE(mysql-binlog, whether to enable mysql binlog,
+[  --enable-mysql-binlog         Enable mysql binlog for php])
+
 dnl If your extension references something external, use with:
 
-PHP_ARG_WITH(mysql_binlog, for mysql_binlog support,
+PHP_ARG_WITH(mysql-replication, for mysql replication api support,
 dnl Make sure that the comment is aligned:
-[  --with-mysql_binlog             Include mysql_binlog support])
+[  --with-mysql-replication             Include mysql replication api support])
 
-PHP_ARG_WITH(boost, for mysql_binlog support,
+PHP_ARG_WITH(boost, for boost support,
 dnl Make sure that the comment is aligned:
 [  --with-boost             Include boost support])
 
@@ -19,7 +22,7 @@ if test "$PHP_MYSQL_BINLOG" != "no"; then
   dnl Write more examples of tests here...
 
   dnl # --with-mysql_binlog -> check with-path
-  SEARCH_PATH="/usr/local /usr /local /opt"     # you might want to change this
+  SEARCH_PATH="/usr/local /usr /local /opt $PHP_MYSQL_REPLICATION"     # you might want to change this
   SEARCH_FOR="/include/binlog_api.h"  # you most likely want to change this
   if test -r $PHP_MYSQL_BINLOG/$SEARCH_FOR; then # path given as parameter
     MYSQL_BINLOG_DIR=$PHP_MYSQL_BINLOG
