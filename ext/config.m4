@@ -9,7 +9,11 @@ dnl If your extension references something external, use with:
 
 PHP_ARG_WITH(mysql_binlog, for mysql_binlog support,
 dnl Make sure that the comment is aligned:
-[  --with-mysql_binlog             Include hello_world support])
+[  --with-mysql_binlog             Include mysql_binlog support])
+
+PHP_ARG_WITH(boost, for mysql_binlog support,
+dnl Make sure that the comment is aligned:
+[  --with-boost             Include boost support])
 
 if test "$PHP_MYSQL_BINLOG" != "no"; then
   dnl Write more examples of tests here...
@@ -35,12 +39,15 @@ if test "$PHP_MYSQL_BINLOG" != "no"; then
   fi
 
   dnl # --with-mysql_binlog -> add include path
+  
   PHP_ADD_INCLUDE($MYSQL_BINLOG_DIR/include)
+  PHP_ADD_INCLUDE($PHP_BOOST/include)
 
   PHP_REQUIRE_CXX()
 
   PHP_SUBST(MYSQL_BINLOG_SHARED_LIBADD)
   PHP_ADD_LIBRARY(stdc++, 1, MYSQL_BINLOG_SHARED_LIBADD)
   PHP_ADD_LIBRARY(replication, 1, $MYSQL_BINLOG_DIR/lib)
+  PHP_ADD_LIBRARY(boost_system, 1, $PHP_BOOST/lib)  
   PHP_NEW_EXTENSION(mysql_binlog, mysql_binlog.cpp, $ext_shared)
 fi
