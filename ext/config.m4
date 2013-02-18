@@ -12,18 +12,18 @@ dnl If your extension references something external, use with:
 
 PHP_ARG_WITH(mysql-replication, for mysql replication api support,
 dnl Make sure that the comment is aligned:
-[  --with-mysql-replication=DIR      Include mysql replication api support])
+[  --with-mysql-replication=DIR             Include mysql replication api support])
 
 if test "$PHP_MYSQL_BINLOG" != "no"; then
   dnl Write more examples of tests here...
 
   dnl # --with-mysql_binlog -> check with-path
-  SEARCH_PATH="/usr/local /usr /local /opt $PHP_MYSQL_REPLICATION"
+  SEARCH_PATH="/usr/local /usr /local /opt"
   SEARCH_FOR="/include/binlog_api.h"
-  # check $PHP_MYSQL_REPLICATION first
+  dnl check $PHP_MYSQL_REPLICATION first
   if test -r $PHP_MYSQL_REPLICATION/$SEARCH_FOR; then
-    MYSQL_BINLOG_DIR=$PHP_MYSQL_BINLOG
-  # else search default path list
+    MYSQL_BINLOG_DIR=$PHP_MYSQL_REPLICATION
+  dnl else search default path list
   else
     AC_MSG_CHECKING([for mysql_binlog files in default path])
     for i in $SEARCH_PATH ; do
