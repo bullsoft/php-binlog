@@ -25,17 +25,51 @@ extern zend_module_entry mysql_binlog_module_entry;
 #define phpext_mysql_binlog_ptr &mysql_binlog_module_entry
 
 #ifdef PHP_WIN32
-#	define PHP_MYSQL_BINLOG_API __declspec(dllexport)
+#define PHP_MYSQL_BINLOG_API __declspec(dllexport)
+#define __F(f) (reinterpret_cast<VALUE (__cdecl *)(...)>(f))
 #elif defined(__GNUC__) && __GNUC__ >= 4
-#	define PHP_MYSQL_BINLOG_API __attribute__ ((visibility("default")))
+#define PHP_MYSQL_BINLOG_API __attribute__ ((visibility("default")))
+#define __F(f) (reinterpret_cast<VALUE (*)(...)>(f))
 #else
-#	define PHP_MYSQL_BINLOG_API
+#define PHP_MYSQL_BINLOG_API
+#define __F(f) (reinterpret_cast<VALUE (*)(...)>(f))
 #endif
 
 extern "C" {
 #ifdef ZTS
 #include "TSRM.h"
 #endif
+}
+
+// XXX:
+#define private public
+
+#include <string>
+#include <binlog_api.h>
+
+// #include "php_mysql_binlog_event.h"
+
+#ifndef RSTRING_PTR
+#define RSTRING_PTR(s) (RSTRING(s)->ptr)
+#endif
+#ifndef RSTRING_LEN
+#define RSTRING_LEN(s) (RSTRING(s)->len)
+#endif
+
+#define WAIT_INTERVAL 300
+
+extern VALUE php_mBinlog;
+extern VALUE php_eBinlogError;
+
+namespace php {
+namespace binlog {
+const char* get_field_type_str(mysql::system::enum_field_types type);
+mysql::system::Binlog_tcp_driver *cast_to_tcp_driver(mysql::system::Binary_log_driver *driver);
+} // namespace binlog
+} // namespace php
+
+extern "C" {
+void Init_binlog();
 }
 
 PHP_MINIT_FUNCTION(mysql_binlog);
