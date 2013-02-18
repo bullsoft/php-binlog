@@ -14,10 +14,6 @@ PHP_ARG_WITH(mysql-replication, for mysql replication api support,
 dnl Make sure that the comment is aligned:
 [  --with-mysql-replication=DIR      Include mysql replication api support])
 
-PHP_ARG_WITH(boost, for boost support,
-dnl Make sure that the comment is aligned:
-[  --with-boost=DIR                  Include boost support])
-
 if test "$PHP_MYSQL_BINLOG" != "no"; then
   dnl Write more examples of tests here...
 
@@ -46,13 +42,11 @@ if test "$PHP_MYSQL_BINLOG" != "no"; then
   dnl # --with-mysql_binlog -> add include path
   
   PHP_ADD_INCLUDE($MYSQL_BINLOG_DIR/include)
-  PHP_ADD_INCLUDE($PHP_BOOST/include)
 
   PHP_REQUIRE_CXX()
 
   PHP_SUBST(MYSQL_BINLOG_SHARED_LIBADD)
   PHP_ADD_LIBRARY(stdc++, 1, MYSQL_BINLOG_SHARED_LIBADD)
   PHP_ADD_LIBRARY(replication, 1, $MYSQL_BINLOG_DIR/lib)
-  PHP_ADD_LIBRARY(boost_system, 1, $PHP_BOOST/lib)  
   PHP_NEW_EXTENSION(mysql_binlog, mysql_binlog.cpp, $ext_shared)
 fi
