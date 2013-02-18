@@ -182,6 +182,6 @@ PHP_FUNCTION(confirm_mysql_binlog_compiled)
  * tab-width: 4
  * c-basic-offset: 4
  * End:
- * vim600: noet sw=4 ts=4 fdm=marker
+ * vim600: noet sw=4 ts=4
  * vim<600: noet sw=4 ts=4
  */
