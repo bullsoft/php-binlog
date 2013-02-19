@@ -24,6 +24,7 @@
 extern zend_module_entry mysql_binlog_module_entry;
 #define phpext_mysql_binlog_ptr &mysql_binlog_module_entry
 
+#define VALUE zval *
 #ifdef PHP_WIN32
 #define PHP_MYSQL_BINLOG_API __declspec(dllexport)
 #define __F(f) (reinterpret_cast<VALUE (__cdecl *)(...)>(f))
