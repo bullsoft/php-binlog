@@ -73,6 +73,9 @@ ZEND_GET_MODULE(mysql_binlog)
 END_EXTERN_C()
 #endif
 
+zend_class_entry *binlog_ce;
+
+
 /* {{{ PHP_INI
  */
 /* Remove comments and fill if you need to have entries in php.ini
