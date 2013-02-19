@@ -39,6 +39,19 @@ const zend_function_entry mysql_binlog_functions[] = {
 	{NULL, NULL, NULL}
 };
 
+/*
+ * mysql replication client
+ *
+ */
+zend_class_entry *client_ce;
+
+PHP_METHOD(Client, __construct);
+
+const zend_function_entry client_methods[] = {
+	PHP_ME(Client, __contruct, NULL, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+	{NULL, NULL, NULL}
+};
+
 /* {{{ mysql_binlog_module_entry
  */
 zend_module_entry mysql_binlog_module_entry = {
@@ -93,6 +106,9 @@ PHP_MINIT_FUNCTION(mysql_binlog)
 	/* If you have INI entries, uncomment these lines 
 	REGISTER_INI_ENTRIES();
 	*/
+	zend_class_entry ce;
+	INIT_CLASS_ENTRY(ce, "Client", client_methods);
+	client_ce = zend_register_internal_class(&ce TSRMLS_CC);
 	return SUCCESS;
 }
 /* }}} */
