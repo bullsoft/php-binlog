@@ -1,26 +1,16 @@
 dnl $Id$
 dnl config.m4 for extension mysql_binlog
 
-dnl Comments in this file start with the string 'dnl'.
-dnl Remove where necessary. This file will not work
-dnl without editing.
-
 PHP_ARG_ENABLE(mysql-binlog, whether to enable mysql binlog,
 [  --enable-mysql-binlog             Enable mysql binlog for php])
 
-dnl If your extension references something external, use with:
-
 PHP_ARG_WITH(mysql-replication, for mysql replication api support,
-dnl Make sure that the comment is aligned:
 [  --with-mysql-replication=DIR             Include mysql replication api support])
 
 PHP_ARG_WITH(boost, for boost support,
 [  --with-boost=DIR                  Include boost support])
 
 if test "$PHP_MYSQL_BINLOG" != "no"; then
-  dnl Write more examples of tests here...
-
-  dnl # --with-mysql_binlog -> check with-path
   SEARCH_PATH="/usr/local /usr /local /opt"
   SEARCH_FOR="/include/binlog_api.h"
   dnl check $PHP_MYSQL_REPLICATION first
@@ -42,7 +32,7 @@ if test "$PHP_MYSQL_BINLOG" != "no"; then
     AC_MSG_ERROR([Please reinstall the mysql_binlog distribution])
   fi
 
-  dnl # --with-mysql_binlog -> add include path
+  dnl # --enable-mysql-binlog -> add include path
   
   PHP_ADD_INCLUDE($MYSQL_BINLOG_DIR/include)
   PHP_ADD_INCLUDE($PHP_BOOST/include)
