@@ -45,7 +45,6 @@ const zend_function_entry mysql_binlog_functions[] = {
  */
 zend_class_entry *client_ce;
 
-PHP_METHOD(Client, __construct);
 
 const zend_function_entry client_methods[] = {
 	PHP_ME(Client, __construct, NULL, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
