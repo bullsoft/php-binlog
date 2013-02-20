@@ -47,7 +47,7 @@ zend_class_entry *client_ce;
 
 
 const zend_function_entry client_methods[] = {
-	PHP_ME(Client, __construct, NULL, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+	PHP_ME(BinlogClient, __construct, NULL, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
 	{NULL, NULL, NULL}
 };
 
