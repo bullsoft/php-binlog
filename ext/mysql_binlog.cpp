@@ -106,7 +106,7 @@ PHP_MINIT_FUNCTION(mysql_binlog)
 	REGISTER_INI_ENTRIES();
 	*/
 	zend_class_entry ce;
-	INIT_CLASS_ENTRY(ce, "Client", client_methods);
+	INIT_CLASS_ENTRY(ce, "BinlogClient", client_methods);
 	client_ce = zend_register_internal_class(&ce TSRMLS_CC);
 	return SUCCESS;
 }
