@@ -45,10 +45,9 @@ const zend_function_entry mysql_binlog_functions[] = {
  */
 zend_class_entry *client_ce;
 
-PHP_METHOD(Client, __construct);
 
 const zend_function_entry client_methods[] = {
-	PHP_ME(Client, __construct, NULL, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+	ZEND_ME(BinlogClient, __construct, NULL, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
 	{NULL, NULL, NULL}
 };
 
@@ -110,7 +109,7 @@ PHP_MINIT_FUNCTION(mysql_binlog)
 	REGISTER_INI_ENTRIES();
 	*/
 	zend_class_entry ce;
-	INIT_CLASS_ENTRY(ce, "Client", client_methods);
+	INIT_CLASS_ENTRY(ce, "BinlogClient", client_methods);
 	client_ce = zend_register_internal_class(&ce TSRMLS_CC);
 	return SUCCESS;
 }

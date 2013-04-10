@@ -68,6 +68,12 @@ ZEND_END_MODULE_GLOBALS(mysql_binlog)
 #define MYSQL_BINLOG_G(v) (mysql_binlog_globals.v)
 #endif
 
+ZEND_METHOD(BinlogClient, __construct);
+ZEND_METHOD(BinlogClient, __destruct);
+ZEND_METHOD(BinlogClient, connect);
+ZEND_METHOD(BinlogClient, setPosition);
+ZEND_METHOD(BinlogClient, waitForNextEvent);
+
 #endif	/* PHP_MYSQL_BINLOG_H */
 
 /*
