@@ -18,11 +18,11 @@
 
 /* $Id$ */
 
-#ifndef PHP_MYSQL_BINLOG_H
-#define PHP_MYSQL_BINLOG_H
+#ifndef PHP_MYSQLBINLOG_H
+#define PHP_MYSQLBINLOG_H
 
-extern zend_module_entry mysql_binlog_module_entry;
-#define phpext_mysql_binlog_ptr &mysql_binlog_module_entry
+extern zend_module_entry mysqlbinlog_module_entry;
+#define phpext_mysqlbinlog_ptr &mysqlbinlog_module_entry
 
 extern "C" {
 #ifdef ZTS
@@ -30,51 +30,61 @@ extern "C" {
 #endif
 }
 
-#include <binlog_api.h>
+#define PHP_MYSQLBINLOG_VERSION "0.1.0"
 
-//#include "php_mysql_binlog_event.h"
+#ifdef PHP_WIN32
+#	define PHP_MYSQLBINLOG_API __declspec(dllexport)
+#elif defined(__GNUC__) && __GNUC__ >= 4
+#	define PHP_MYSQLBINLOG_API __attribute__ ((visibility("default")))
+#else
+#	define PHP_MYSQLBINLOG_API
+#endif
 
-#define PHP_MYSQL_BINLOG_VERSION "0.1.0"
+#ifdef ZTS
+#include "TSRM.h"
+#endif
 
-PHP_MINIT_FUNCTION(mysql_binlog);
-PHP_MSHUTDOWN_FUNCTION(mysql_binlog);
-PHP_RINIT_FUNCTION(mysql_binlog);
-PHP_RSHUTDOWN_FUNCTION(mysql_binlog);
-PHP_MINFO_FUNCTION(mysql_binlog);
+PHP_MINIT_FUNCTION(mysqlbinlog);
+PHP_MSHUTDOWN_FUNCTION(mysqlbinlog);
+PHP_RINIT_FUNCTION(mysqlbinlog);
+PHP_RSHUTDOWN_FUNCTION(mysqlbinlog);
+PHP_MINFO_FUNCTION(mysqlbinlog);
+
+PHP_FUNCTION(confirm_mysqlbinlog_compiled);	/* For testing, remove later. */
+PHP_FUNCTION(binlog_connect);
+PHP_FUNCTION(binlog_wait_for_next_event);
+// PHP_FUNCTION(binlog_set_position);
+// PHP_FUNCTION(binlog_get_position);
+
 
 /* 
   	Declare any global variables you may need between the BEGIN
 	and END macros here:     
 
-ZEND_BEGIN_MODULE_GLOBALS(mysql_binlog)
+ZEND_BEGIN_MODULE_GLOBALS(mysqlbinlog)
 	long  global_value;
 	char *global_string;
-ZEND_END_MODULE_GLOBALS(mysql_binlog)
+ZEND_END_MODULE_GLOBALS(mysqlbinlog)
 */
 
 /* In every utility function you add that needs to use variables 
-   in php_mysql_binlog_globals, call TSRMLS_FETCH(); after declaring other 
+   in php_mysqlbinlog_globals, call TSRMLS_FETCH(); after declaring other 
    variables used by that function, or better yet, pass in TSRMLS_CC
    after the last function argument and declare your utility function
    with TSRMLS_DC after the last declared argument.  Always refer to
-   the globals in your function as MYSQL_BINLOG_G(variable).  You are 
+   the globals in your function as MYSQLBINLOG_G(variable).  You are 
    encouraged to rename these macros something shorter, see
    examples in any other php module directory.
 */
 
 #ifdef ZTS
-#define MYSQL_BINLOG_G(v) TSRMG(mysql_binlog_globals_id, zend_mysql_binlog_globals *, v)
+#define MYSQLBINLOG_G(v) TSRMG(mysqlbinlog_globals_id, zend_mysqlbinlog_globals *, v)
 #else
-#define MYSQL_BINLOG_G(v) (mysql_binlog_globals.v)
+#define MYSQLBINLOG_G(v) (mysqlbinlog_globals.v)
 #endif
 
-ZEND_METHOD(BinlogClient, __construct);
-ZEND_METHOD(BinlogClient, __destruct);
-ZEND_METHOD(BinlogClient, connect);
-ZEND_METHOD(BinlogClient, setPosition);
-ZEND_METHOD(BinlogClient, waitForNextEvent);
+#endif	/* PHP_MYSQLBINLOG_H */
 
-#endif	/* PHP_MYSQL_BINLOG_H */
 
 /*
  * Local variables:
