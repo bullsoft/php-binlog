@@ -23,15 +23,16 @@ if test "$PHP_MYSQLBINLOG" != "no"; then
 
   dnl # --with-mysqlbinlog -> check with-path
   SEARCH_PATH="/usr/local /usr"     # you might want to change this
-  SEARCH_FOR="/include/binlog_api.h"  
-
-  if test -r $PHP_MYSQL_REPLICATION/$SEARCH_FOR; then
+  SEARCH_FOR_REPLICATION="/include/binlog_api.h"  
+  SEARCH_FOR_BOOST="/lib/libboost_system.so"
+    
+  if test -r $PHP_MYSQL_REPLICATION/$SEARCH_FOR_REPLICATION; then
     MYSQL_REPLICATION_DIR=$PHP_MYSQL_REPLICATION
   dnl else search default path list
   else
-    AC_MSG_CHECKING([for mysql replication libraries in default path])
+    AC_MSG_CHECKING([for mysql-replication-listener libraries in default path])
     for i in $SEARCH_PATH ; do
-      if test -r $i/$SEARCH_FOR; then
+      if test -r $i/$SEARCH_FOR_REPLICATION; then
         MYSQL_REPLICATION_DIR=$i
         AC_MSG_RESULT(found in $i)
       fi
@@ -40,13 +41,33 @@ if test "$PHP_MYSQLBINLOG" != "no"; then
   dnl test replication dir
   if test -z "$MYSQL_REPLICATION_DIR"; then
     AC_MSG_RESULT([not found])
-    AC_MSG_ERROR([Please reinstall the mysql replication distribution])
+    AC_MSG_ERROR([Please check --with-mysql-replication option])
   fi
 
+  
+  if test -r $PHP_BOOST/$SEARCH_FOR_BOOST; then
+    BOOST_DIR=$PHP_BOOST
+  dnl else search default path list
+  else
+    AC_MSG_CHECKING([for boost libraries in default path])
+    for i in $SEARCH_PATH ; do
+      if test -r $i/$SEARCH_FOR_BOOST; then
+        BOOST_DIR=$i
+        AC_MSG_RESULT(found in $i)
+      fi
+    done
+  fi
+  
+  dnl test boost dir
+  if test -z "$BOOST_DIR"; then
+    AC_MSG_RESULT([not found])
+    AC_MSG_ERROR([Please check --with-boost option])
+  fi
+  
   dnl # --enable-mysql-binlog -> add include path
   
   PHP_ADD_INCLUDE($MYSQL_REPLICATION_DIR/include)
-  PHP_ADD_INCLUDE($PHP_BOOST/include)
+  PHP_ADD_INCLUDE($BOOST_DIR/include)
 
   PHP_REQUIRE_CXX()
 
@@ -56,7 +77,7 @@ if test "$PHP_MYSQLBINLOG" != "no"; then
   PHP_ADD_LIBPATH($MYSQL_REPLICATION_DIR"/lib")
   PHP_ADD_LIBRARY(replication, 1, MYSQLBINLOG_SHARED_LIBADD)
 
-  PHP_ADD_LIBPATH($PHP_BOOST"/lib")
+  PHP_ADD_LIBPATH($BOOST_DIR"/lib")
   PHP_ADD_LIBRARY(boost_system, 1, MYSQLBINLOG_SHARED_LIBADD)  
   PHP_NEW_EXTENSION(mysqlbinlog, mysqlbinlog.cpp, $ext_shared)
 fi
