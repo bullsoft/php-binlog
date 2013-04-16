@@ -60,7 +60,7 @@ const zend_function_entry mysqlbinlog_functions[] = {
     PHP_FE(binlog_wait_for_next_event, NULL)
     // PHP_FE(binlog_set_position, NULL)
     // PHP_FE(binlog_get_position, NULL)
-	PHP_FE_END	/* Must be the last line in mysqlbinlog_functions[] */
+	PHP_FE_END
 };
 /* }}} */
 
@@ -242,7 +242,7 @@ PHP_FUNCTION(binlog_wait_for_next_event)
     
     switch (event->get_event_type()) {
         case QUERY_EVENT:
-            add_assoc_string(return_value, "query", (static_cast<Query_event*>(event)->query).data(), 1);
+            add_assoc_string(return_value, "query", (char *)(static_cast<Query_event*>(event)->query).data(), 1);
             // std::cout << static_cast<Query_event*>(event)->query
             //           << static_cast<Query_event*>(event)->header()->timestamp
             //           << std::endl;
