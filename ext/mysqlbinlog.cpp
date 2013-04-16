@@ -232,11 +232,11 @@ PHP_FUNCTION(binlog_wait_for_next_event)
 
 PHP_FUNCTION(binlog_set_position)
 {
-    zval *link, *file;
+    zval *link, *file = NULL;
     int result, id = -1; long position;
     Binary_log *bp;
     
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rlz!", &link, &position, &file) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl|z!", &link, &position, &file) == FAILURE) {
 		RETURN_NULL();
 	}
 
