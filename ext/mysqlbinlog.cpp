@@ -236,7 +236,7 @@ PHP_FUNCTION(binlog_set_position)
     int result, id = -1; long position;
     Binary_log *bp;
     
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl!s", &link, &position, &file) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rlz!", &link, &position, &file) == FAILURE) {
 		RETURN_NULL();
 	}
 
@@ -265,11 +265,11 @@ PHP_FUNCTION(binlog_set_position)
 
 PHP_FUNCTION(binlog_get_position)
 {
-    zval *link, *file;
+    zval *link, *file = NULL;
     int id = -1;
     Binary_log *bp;
     
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r!z", &link, &file) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r|z", &link, &file) == FAILURE) {
 		RETURN_NULL();
 	}
 
@@ -277,7 +277,7 @@ PHP_FUNCTION(binlog_get_position)
 
     std::string filename;
     
-    if (!file) {
+    if (!file || Z_TYPE_P(file) == IS_NULL) {
         RETURN_LONG(bp->get_position());
     } else if (Z_TYPE_P(file) == IS_STRING) {
         filename.assign(Z_STRVAL_P(file));
