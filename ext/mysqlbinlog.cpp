@@ -40,7 +40,6 @@ using mysql::system::create_transport;
 using mysql::system::get_event_type_str;
 using mysql::User_var_event;
 
-
 /* If you declare any globals in php_mysqlbinlog.h uncomment this:
 ZEND_DECLARE_MODULE_GLOBALS(mysqlbinlog)
 */
@@ -55,11 +54,10 @@ static int le_binloglink;
  * Every user visible function must have an entry in mysqlbinlog_functions[].
  */
 const zend_function_entry mysqlbinlog_functions[] = {
-	PHP_FE(confirm_mysqlbinlog_compiled,	NULL)		/* For testing, remove later. */
     PHP_FE(binlog_connect, NULL)
     PHP_FE(binlog_wait_for_next_event, NULL)
-    // PHP_FE(binlog_set_position, NULL)
-    // PHP_FE(binlog_get_position, NULL)
+    PHP_FE(binlog_set_position, NULL)
+    PHP_FE(binlog_get_position, NULL)
 	PHP_FE_END	/* Must be the last line in mysqlbinlog_functions[] */
 };
 /* }}} */
@@ -118,7 +116,7 @@ PHP_MINIT_FUNCTION(mysqlbinlog)
 	/* If you have INI entries, uncomment these lines 
 	REGISTER_INI_ENTRIES();
 	*/
-    le_binloglink = zend_register_list_destructors_ex(NULL, NULL, BINLOG_LINK_DESC, module_number);
+    le_binloglink = zend_register_list_destructors_ex(binlog_destruction_handler, NULL, BINLOG_LINK_DESC, module_number);
 	return SUCCESS;
 }
 /* }}} */
@@ -167,41 +165,11 @@ PHP_MINFO_FUNCTION(mysqlbinlog)
 }
 /* }}} */
 
-
-/* Remove the following function when you have succesfully modified config.m4
-   so that your module can be compiled into PHP, it exists only for testing
-   purposes. */
-
-/* Every user-visible function in PHP should document itself in the source */
-/* {{{ proto string confirm_mysqlbinlog_compiled(string arg)
-   Return a string to confirm that the module is compiled in */
-
-PHP_FUNCTION(confirm_mysqlbinlog_compiled)
+void binlog_destruction_handler(zend_rsrc_list_entry *rsrc TSRMLS_DC)
 {
-	char *arg = NULL;
-	int arg_len, len;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &arg, &arg_len) == FAILURE) {
-		return;
-	}
-    Binary_log binlog(create_transport(arg));
-    binlog.connect();
-
-    while (true) {
-        Binary_log_event *event;
-        int result = binlog.wait_for_next_event(&event);
-        if (result == ERR_EOF)
-            break;
-        switch (event->get_event_type()) {
-            case QUERY_EVENT:
-                std::cout << static_cast<Query_event*>(event)->query
-                          << static_cast<Query_event*>(event)->header()->timestamp
-                          << std::endl;
-                break;
-        }
-    }
+    // le_binloglink *link = (le_binloglink *)rsrc->ptr;
+    // delete link;
 }
-/* }}} */
 
 PHP_FUNCTION(binlog_connect)
 {
@@ -213,7 +181,10 @@ PHP_FUNCTION(binlog_connect)
 		RETURN_NULL();
 	}
     bp = new Binary_log (create_transport(arg));
-    bp->connect();
+    if(bp->connect()) {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "binlog connect failed");        
+        RETURN_FALSE;
+    }
 
     ZEND_REGISTER_RESOURCE(return_value, bp, le_binloglink);
 }
@@ -224,7 +195,6 @@ PHP_FUNCTION(binlog_wait_for_next_event)
     int id = -1;
     Binary_log *bp;
     Binary_log_event *event;
-    
     
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &link) == FAILURE) {
 		RETURN_NULL();
@@ -238,18 +208,88 @@ PHP_FUNCTION(binlog_wait_for_next_event)
 
     array_init(return_value);
     
-    add_assoc_long(return_value, "type", event->get_event_type());
-    
+    add_assoc_long(return_value, "type_code", event->get_event_type());
+    add_assoc_string(return_value, "type_str", estrdup(get_event_type_str(event->get_event_type())), 1);
+
     switch (event->get_event_type()) {
-        case QUERY_EVENT:
-            add_assoc_string(return_value, "query", strdup((static_cast<Query_event*>(event)->query).c_str()), 1);
+         case QUERY_EVENT:
+         {
+            const mysql::Query_event *qev= static_cast<const mysql::Query_event *>(event);
+            add_assoc_string(return_value, "query", estrdup(qev->query.c_str()), 1);
+            add_assoc_string(return_value, "dbname", estrdup(qev->db_name.c_str()), 1);
             // std::cout << static_cast<Query_event*>(event)->query
             //           << static_cast<Query_event*>(event)->header()->timestamp
             //           << std::endl;
+         }
+            break;
+        case mysql::ROTATE_EVENT:
+        {
+            mysql::Rotate_event *rot= static_cast<mysql::Rotate_event *>(event);
+            add_assoc_string(return_value, "filename", estrdup(rot->binlog_file.c_str()), 1);
+            add_assoc_long(return_value, "position", rot->binlog_pos);
+        }
             break;
     }
+    delete event;
+}
+
+PHP_FUNCTION(binlog_set_position)
+{
+    zval *link, *file;
+    int result, id = -1; long position;
+    Binary_log *bp;
     
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl!s", &link, &position, &file) == FAILURE) {
+		RETURN_NULL();
+	}
+
+    ZEND_FETCH_RESOURCE(bp, Binary_log *, &link, id, BINLOG_LINK_DESC, le_binloglink);
+
+    if (!file) {
+        result = bp->set_position(position);
+    } else if (Z_TYPE_P(file) == IS_STRING) {
+        result = bp->set_position(Z_STRVAL_P(file), position);
+    } else {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "filename must be a string");
+        RETURN_FALSE;
+    }
+    switch(result) {
+        case ERR_OK:
+            RETURN_TRUE;
+            break;
+        case ERR_EOF:
+            RETURN_NULL();
+            break;
+       default:
+           RETURN_FALSE;
+           break;
+    }
+}
+
+PHP_FUNCTION(binlog_get_position)
+{
+    zval *link, *file;
+    int id = -1;
+    Binary_log *bp;
     
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r!z", &link, &file) == FAILURE) {
+		RETURN_NULL();
+	}
+
+    ZEND_FETCH_RESOURCE(bp, Binary_log *, &link, id, BINLOG_LINK_DESC, le_binloglink);
+
+    std::string *filename;
+    
+    if (!file) {
+        RETURN_LONG(bp->get_position());
+    } else if (Z_TYPE_P(file) == IS_STRING) {
+        filename = new std::string(Z_STRVAL_P(file));
+        RETURN_LONG(bp->get_position(*filename));
+    } else {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "filename must be a string");
+        RETURN_FALSE;
+    }
+    delete filename;
 }
 
 /*

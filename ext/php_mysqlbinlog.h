@@ -50,11 +50,12 @@ PHP_RINIT_FUNCTION(mysqlbinlog);
 PHP_RSHUTDOWN_FUNCTION(mysqlbinlog);
 PHP_MINFO_FUNCTION(mysqlbinlog);
 
-PHP_FUNCTION(confirm_mysqlbinlog_compiled);	/* For testing, remove later. */
+void binlog_destruction_handler(zend_rsrc_list_entry *rsrc TSRMLS_DC);
+
 PHP_FUNCTION(binlog_connect);
 PHP_FUNCTION(binlog_wait_for_next_event);
-// PHP_FUNCTION(binlog_set_position);
-// PHP_FUNCTION(binlog_get_position);
+PHP_FUNCTION(binlog_set_position);
+PHP_FUNCTION(binlog_get_position);
 
 
 /* 
