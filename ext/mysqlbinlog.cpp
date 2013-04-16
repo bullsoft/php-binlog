@@ -55,7 +55,7 @@ static int le_binloglink;
  * Every user visible function must have an entry in mysqlbinlog_functions[].
  */
 const zend_function_entry mysqlbinlog_functions[] = {
-	PHP_FE(confirm_mysqlbinlog_compiled,	NULL)		/* For testing, remove later. */
+	PHP_FE(confirm_mysqlbinlog_compiled, NULL)		/* For testing, remove later. */
     PHP_FE(binlog_connect, NULL)
     PHP_FE(binlog_wait_for_next_event, NULL)
     // PHP_FE(binlog_set_position, NULL)
@@ -242,14 +242,14 @@ PHP_FUNCTION(binlog_wait_for_next_event)
     
     switch (event->get_event_type()) {
         case QUERY_EVENT:
-            add_assoc_string(return_value, "query", strdup((static_cast<Query_event*>(event)->query).c_str()), 1);
+            add_assoc_string(return_value, "query", (static_cast<Query_event*>(event)->query).data(), 1);
             // std::cout << static_cast<Query_event*>(event)->query
             //           << static_cast<Query_event*>(event)->header()->timestamp
             //           << std::endl;
             break;
     }
     
-    
+	//php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to bind to server: %s");
 }
 
 /*
@@ -257,6 +257,6 @@ PHP_FUNCTION(binlog_wait_for_next_event)
  * tab-width: 4
  * c-basic-offset: 4
  * End:
- * vim600: noet sw=4 ts=4 fdm=marker
+ * vim600: noet sw=4 ts=4
  * vim<600: noet sw=4 ts=4
  */
