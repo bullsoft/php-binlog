@@ -15,8 +15,11 @@ Dependence
 Install
 =========
 /home/work/local/php/bin/phpize
+
 ./confingure --with-php-config=/home/work/local/php/php-config --with-mysqlbinlog=yes --with-boost=/home/work/boost --with-mysql-replication=/home/work/mysql-replication
+
 make
+
 make install
 
 
