@@ -45,7 +45,7 @@ ZEND_DECLARE_MODULE_GLOBALS(mysqlbinlog)
 */
 
 /* True global resources - no need for thread safety here */
-#define BINLOG_LINK_DESC "MySQL Binlog连接句柄"
+#define BINLOG_LINK_DESC "MySQL Binlog 连接句柄"
 
 static int le_binloglink;
 
@@ -174,7 +174,7 @@ void binlog_destruction_handler(zend_rsrc_list_entry *rsrc TSRMLS_DC)
 PHP_FUNCTION(binlog_connect)
 {
 	char *arg = NULL;
-	int arg_len, len;
+	int  arg_len;
     Binary_log *bp;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &arg, &arg_len) == FAILURE) {
@@ -182,7 +182,7 @@ PHP_FUNCTION(binlog_connect)
 	}
     bp = new Binary_log (create_transport(arg));
     if(bp->connect()) {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "binlog connect failed");        
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Connect to mysql failed: %s", arg);
         RETURN_FALSE;
     }
 
@@ -209,17 +209,14 @@ PHP_FUNCTION(binlog_wait_for_next_event)
     array_init(return_value);
     
     add_assoc_long(return_value, "type_code", event->get_event_type());
-    add_assoc_string(return_value, "type_str", estrdup(get_event_type_str(event->get_event_type())), 1);
+    add_assoc_string(return_value, "type_str", (char *)get_event_type_str(event->get_event_type()), 1);
 
     switch (event->get_event_type()) {
          case QUERY_EVENT:
          {
             const mysql::Query_event *qev= static_cast<const mysql::Query_event *>(event);
-            add_assoc_string(return_value, "query", (char *)(static_cast<Query_event*>(event)->query).data(), 1);
-            add_assoc_string(return_value, "dbname", estrdup(qev->db_name.c_str()), 1);
-            // std::cout << static_cast<Query_event*>(event)->query
-            //           << static_cast<Query_event*>(event)->header()->timestamp
-            //           << std::endl;
+            add_assoc_string(return_value, "query", (char *)(qev->query).c_str(), 1);
+            add_assoc_string(return_value, "dbname", (char *)(qev->db_name).c_str(), 1);
          }
             break;
         case mysql::ROTATE_EVENT:
