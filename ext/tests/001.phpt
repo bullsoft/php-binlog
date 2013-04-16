@@ -1,10 +1,10 @@
 --TEST--
-Check for mysql_binlog presence
+Check for mysqlbinlog presence
 --SKIPIF--
-<?php if (!extension_loaded("mysql_binlog")) print "skip"; ?>
+<?php if (!extension_loaded("mysqlbinlog")) print "skip"; ?>
 --FILE--
 <?php 
-echo "mysql_binlog extension is available";
+echo "mysqlbinlog extension is available";
 /*
 	you can add regression tests for your extension here
 
@@ -18,4 +18,4 @@ echo "mysql_binlog extension is available";
 */
 ?>
 --EXPECT--
-mysql_binlog extension is available
+mysqlbinlog extension is available

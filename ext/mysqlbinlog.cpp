@@ -215,7 +215,7 @@ PHP_FUNCTION(binlog_wait_for_next_event)
          case QUERY_EVENT:
          {
             const mysql::Query_event *qev= static_cast<const mysql::Query_event *>(event);
-            add_assoc_string(return_value, "query", estrdup(qev->query.c_str()), 1);
+            add_assoc_string(return_value, "query", (char *)(static_cast<Query_event*>(event)->query).data(), 1);
             add_assoc_string(return_value, "dbname", estrdup(qev->db_name.c_str()), 1);
             // std::cout << static_cast<Query_event*>(event)->query
             //           << static_cast<Query_event*>(event)->header()->timestamp
@@ -297,6 +297,6 @@ PHP_FUNCTION(binlog_get_position)
  * tab-width: 4
  * c-basic-offset: 4
  * End:
- * vim600: noet sw=4 ts=4 fdm=marker
+ * vim600: noet sw=4 ts=4
  * vim<600: noet sw=4 ts=4
  */
