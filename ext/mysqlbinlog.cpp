@@ -222,7 +222,7 @@ PHP_FUNCTION(binlog_wait_for_next_event)
         case mysql::ROTATE_EVENT:
         {
             mysql::Rotate_event *rot= static_cast<mysql::Rotate_event *>(event);
-            add_assoc_string(return_value, "filename", estrdup(rot->binlog_file.c_str()), 1);
+            add_assoc_string(return_value, "filename", (char *)rot->binlog_file.c_str(), 1);
             add_assoc_long(return_value, "position", rot->binlog_pos);
         }
             break;
@@ -275,18 +275,17 @@ PHP_FUNCTION(binlog_get_position)
 
     ZEND_FETCH_RESOURCE(bp, Binary_log *, &link, id, BINLOG_LINK_DESC, le_binloglink);
 
-    std::string *filename;
+    std::string filename;
     
     if (!file) {
         RETURN_LONG(bp->get_position());
     } else if (Z_TYPE_P(file) == IS_STRING) {
-        filename = new std::string(Z_STRVAL_P(file));
-        RETURN_LONG(bp->get_position(*filename));
+        filename.assign(Z_STRVAL_P(file));
+        RETURN_LONG(bp->get_position(filename));
     } else {
         php_error_docref(NULL TSRMLS_CC, E_WARNING, "filename must be a string");
         RETURN_FALSE;
     }
-    delete filename;
 }
 
 /*
