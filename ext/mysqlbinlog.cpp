@@ -314,13 +314,17 @@ PHP_FUNCTION(binlog_wait_for_next_event)
                 }
                 add_index_zval(mysql_rows, i++, mysql_row);
             } while (++itor != rows.end());
-            
+
+            // Ensure this is the right place to delete table map event.
+            delete MYSQLBINLOG_G(tmev);
             MYSQLBINLOG_G(tmev) = NULL;
             add_assoc_zval(return_value, "rows", mysql_rows);
 		}
 		break;
     }
-    //delete event;
+    if (event_type != mysql::TABLE_MAP_EVENT) {
+        delete event;
+    }
 }
 
 void proc_event(mysql::Row_of_fields &fields, zval *mysql_fields)
@@ -331,7 +335,7 @@ void proc_event(mysql::Row_of_fields &fields, zval *mysql_fields)
   do {
       mysql::system::enum_field_types type = itor->type();
       if (itor->is_null()) {
-          add_index_long(mysql_fields, i++, NULL);
+          add_index_long(mysql_fields, i++, 0);
       } else if (type == mysql::system::MYSQL_TYPE_FLOAT) {
           add_index_double(mysql_fields, i++, itor->as_float());
       } else if (type == mysql::system::MYSQL_TYPE_DOUBLE) {
