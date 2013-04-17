@@ -22,6 +22,27 @@ make
 
 make install
 
+Example
+==========
+```php
+$link = binlog_connect("mysql://root@127.0.0.1:3306");
+// binlog_set_position($link, 4);                                       
+
+while($event=binlog_wait_for_next_event($link)) {
+    // it will block here                                               
+    switch($event['type_code']) {
+        case BINLOG_DELETE_ROWS_EVENT:
+            // do what u want ...                                       
+            break;
+        case BINLOG_WRITE_ROWS_EVENT:
+            // do what u want ...                                       
+            break;
+        case BINLOG_UPDATE_ROWS_EVENT:
+            // do what u want ...                                       
+            break;
+    }
+}
+```
 
 
 Reference
