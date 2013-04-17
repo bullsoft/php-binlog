@@ -50,23 +50,25 @@ PHP_RINIT_FUNCTION(mysqlbinlog);
 PHP_RSHUTDOWN_FUNCTION(mysqlbinlog);
 PHP_MINFO_FUNCTION(mysqlbinlog);
 
+#include <binlog_api.h>
+
 void binlog_destruction_handler(zend_rsrc_list_entry *rsrc TSRMLS_DC);
+void proc_event(mysql::Row_of_fields &fields, zval *mysql_fields);
+
+// zval * proc_insert(mysql::Row_of_fields &fields, zval *php_new_fields);
+/* void proc_delete(mysql::Row_of_fields &fields); */
+/* void proc_update(mysql::Row_of_fields &old_fields, mysql::Row_of_fields &new_fields); */
 
 PHP_FUNCTION(binlog_connect);
 PHP_FUNCTION(binlog_wait_for_next_event);
 PHP_FUNCTION(binlog_set_position);
 PHP_FUNCTION(binlog_get_position);
 
-
-/* 
-  	Declare any global variables you may need between the BEGIN
-	and END macros here:     
+typedef mysql::Table_map_event *tbl_map_evt;
 
 ZEND_BEGIN_MODULE_GLOBALS(mysqlbinlog)
-	long  global_value;
-	char *global_string;
+    tbl_map_evt tmev;
 ZEND_END_MODULE_GLOBALS(mysqlbinlog)
-*/
 
 /* In every utility function you add that needs to use variables 
    in php_mysqlbinlog_globals, call TSRMLS_FETCH(); after declaring other 

@@ -28,7 +28,6 @@ extern "C" {
 #include "ext/standard/info.h"
 }
 
-#include <binlog_api.h>
 #include "php_mysqlbinlog.h"
 
 #include <iostream>
@@ -40,9 +39,7 @@ using mysql::system::create_transport;
 using mysql::system::get_event_type_str;
 using mysql::User_var_event;
 
-/* If you declare any globals in php_mysqlbinlog.h uncomment this:
 ZEND_DECLARE_MODULE_GLOBALS(mysqlbinlog)
-*/
 
 /* True global resources - no need for thread safety here */
 #define BINLOG_LINK_DESC "MySQL Binlog 连接句柄"
@@ -76,7 +73,7 @@ zend_module_entry mysqlbinlog_module_entry = {
 	PHP_RSHUTDOWN(mysqlbinlog),	/* Replace with NULL if there's nothing to do at request end */
 	PHP_MINFO(mysqlbinlog),
 #if ZEND_MODULE_API_NO >= 20010901
-	"0.1", /* Replace with version number for your extension */
+	PHP_MYSQLBINLOG_VERSION, /* Replace with version number for your extension */
 #endif
 	STANDARD_MODULE_PROPERTIES
 };
@@ -212,22 +209,94 @@ PHP_FUNCTION(binlog_wait_for_next_event)
     add_assoc_string(return_value, "type_str", (char *)get_event_type_str(event->get_event_type()), 1);
 
     switch (event->get_event_type()) {
-         case QUERY_EVENT:
-         {
+        case mysql::QUERY_EVENT:
+        {
             const mysql::Query_event *qev= static_cast<const mysql::Query_event *>(event);
             add_assoc_string(return_value, "query", (char *)(qev->query).c_str(), 1);
             add_assoc_string(return_value, "dbname", (char *)(qev->db_name).c_str(), 1);
-         }
-            break;
+        }
+        break;
         case mysql::ROTATE_EVENT:
         {
             mysql::Rotate_event *rot= static_cast<mysql::Rotate_event *>(event);
             add_assoc_string(return_value, "filename", (char *)rot->binlog_file.c_str(), 1);
             add_assoc_long(return_value, "position", rot->binlog_pos);
         }
-            break;
+        break;
+		case mysql::TABLE_MAP_EVENT:
+		{
+            mysql::Table_map_event *mev= static_cast<mysql::Table_map_event *>(event);
+            MYSQLBINLOG_G(tmev) = mev;
+            add_assoc_long(return_value, "table_id", mev->table_id);
+            add_assoc_string(return_value, "table_name", (char *)mev->table_name.c_str(), 1);
+		}
+		break;
+		case mysql::WRITE_ROWS_EVENT:
+		case mysql::UPDATE_ROWS_EVENT:
+		case mysql::DELETE_ROWS_EVENT:
+		{
+            zval *mysql_rows = NULL;
+            MAKE_STD_ZVAL(mysql_rows);
+            array_init(mysql_rows);
+            
+            mysql::Row_event *rev= static_cast<mysql::Row_event *>(event);
+            
+            add_assoc_long(return_value, "table_id", rev->table_id);
+
+            mysql::Row_event_set rows(rev, MYSQLBINLOG_G(tmev));
+            mysql::Row_event_set::iterator itor = rows.begin();
+            
+            int i=0;
+            do {
+                mysql::Row_of_fields fields = *itor;
+                zval *mysql_row = NULL;
+                MAKE_STD_ZVAL(mysql_row);
+                array_init(mysql_row);
+                mysql::Log_event_type event_type = event->get_event_type();
+                if (event_type == mysql::WRITE_ROWS_EVENT) {
+                    proc_event(fields, mysql_row);
+                }
+                add_index_zval(mysql_rows, i++, mysql_row);
+            } while (++itor != rows.end());
+            
+            MYSQLBINLOG_G(tmev) = NULL;
+            add_assoc_zval(return_value, "data", mysql_rows);
+		}
+		break;
     }
-    delete event;
+    //delete event;
+}
+
+
+// void proc_update(mysql::Row_of_fields &old_fields, mysql::Row_of_fields &new_fields)
+// {
+
+// }
+
+// void proc_delete(mysql::Row_of_fields &fields)
+// {
+
+// }
+
+void proc_event(mysql::Row_of_fields &fields, zval *mysql_fields)
+{
+  mysql::Converter converter;
+  mysql::Row_of_fields::iterator itor = fields.begin();
+  int i = 0;
+  do {
+      mysql::system::enum_field_types type = itor->type();
+      //if (itor->is_null()) {
+      //    add_index_long(mysql_fields, i++, NULL);
+      if (type == mysql::system::MYSQL_TYPE_FLOAT) {
+          add_index_double(mysql_fields, i++, itor->as_float());
+      } else if (type == mysql::system::MYSQL_TYPE_DOUBLE) {
+          add_index_double(mysql_fields, i++, itor->as_double());
+      } else {
+          std::string out;
+          converter.to(out, *itor);
+          add_index_string(mysql_fields, i++, (char *)(out.c_str()), 1);
+      }
+  } while(++itor != fields.end());
 }
 
 PHP_FUNCTION(binlog_set_position)
