@@ -265,6 +265,7 @@ PHP_FUNCTION(binlog_wait_for_next_event)
 		{
             MYSQLBINLOG_G(tmev) = static_cast<mysql::Table_map_event *>(event);
             
+            add_assoc_string(return_value, "db_name", (char *) MYSQLBINLOG_G(tmev)->db_name.c_str(), 1);            
             add_assoc_long(return_value, "table_id", MYSQLBINLOG_G(tmev)->table_id);
             add_assoc_string(return_value, "table_name", (char *) MYSQLBINLOG_G(tmev)->table_name.c_str(), 1);
 		}
@@ -279,8 +280,10 @@ PHP_FUNCTION(binlog_wait_for_next_event)
             
             mysql::Row_event *rev= static_cast<mysql::Row_event *>(event);
             
-            add_assoc_long(return_value, "table_id", rev->table_id);
-
+            // add_assoc_long(return_value, "table_id", rev->table_id);
+            add_assoc_string(return_value, "db_name", (char *) MYSQLBINLOG_G(tmev)->db_name.c_str(), 1);            
+            add_assoc_string(return_value, "table_name", (char *) MYSQLBINLOG_G(tmev)->table_name.c_str(), 1);
+            
             mysql::Row_event_set rows(rev, MYSQLBINLOG_G(tmev));
             mysql::Row_event_set::iterator itor = rows.begin();
             
