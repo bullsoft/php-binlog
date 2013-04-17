@@ -225,10 +225,10 @@ PHP_FUNCTION(binlog_wait_for_next_event)
         break;
 		case mysql::TABLE_MAP_EVENT:
 		{
-            mysql::Table_map_event *mev= static_cast<mysql::Table_map_event *>(event);
-            MYSQLBINLOG_G(tmev) = mev;
-            add_assoc_long(return_value, "table_id", mev->table_id);
-            add_assoc_string(return_value, "table_name", (char *)mev->table_name.c_str(), 1);
+            MYSQLBINLOG_G(tmev) = static_cast<mysql::Table_map_event *>(event);
+            
+            add_assoc_long(return_value, "table_id", MYSQLBINLOG_G(tmev)->table_id);
+            add_assoc_string(return_value, "table_name", (char *) MYSQLBINLOG_G(tmev)->table_name.c_str(), 1);
 		}
 		break;
 		case mysql::WRITE_ROWS_EVENT:
@@ -285,16 +285,16 @@ void proc_event(mysql::Row_of_fields &fields, zval *mysql_fields)
   int i = 0;
   do {
       mysql::system::enum_field_types type = itor->type();
-      //if (itor->is_null()) {
-      //    add_index_long(mysql_fields, i++, NULL);
-      if (type == mysql::system::MYSQL_TYPE_FLOAT) {
+      if (itor->is_null()) {
+          add_index_long(mysql_fields, i++, NULL);
+      } else if (type == mysql::system::MYSQL_TYPE_FLOAT) {
           add_index_double(mysql_fields, i++, itor->as_float());
       } else if (type == mysql::system::MYSQL_TYPE_DOUBLE) {
           add_index_double(mysql_fields, i++, itor->as_double());
       } else {
           std::string out;
           converter.to(out, *itor);
-          add_index_string(mysql_fields, i++, (char *)(out.c_str()), 1);
+          add_index_string(mysql_fields, i++, (char *)out.c_str(), 1);
       }
   } while(++itor != fields.end());
 }
