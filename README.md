@@ -1,7 +1,7 @@
-php-binlog
+PHP Binlog
 ==========
 
-A php-client for mysql replication listener API
+A PHP-Client for mysql replication listener API.
 
 That's what we want to do.
 
