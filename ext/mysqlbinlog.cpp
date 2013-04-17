@@ -110,8 +110,42 @@ static void php_mysqlbinlog_init_globals(zend_mysqlbinlog_globals *mysqlbinlog_g
  */
 PHP_MINIT_FUNCTION(mysqlbinlog)
 {
+    REGISTER_LONG_CONSTANT("BINLOG_UNKNOWN_EVENT"            , mysql::UNKNOWN_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_START_EVENT_V3"           , mysql::START_EVENT_V3, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_QUERY_EVENT"              , mysql::QUERY_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_STOP_EVENT"               , mysql::STOP_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_ROTATE_EVENT"             , mysql::ROTATE_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_INTVAR_EVENT"             , mysql::INTVAR_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_LOAD_EVENT"               , mysql::LOAD_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_SLAVE_EVENT"              , mysql::SLAVE_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_CREATE_FILE_EVENT"        , mysql::CREATE_FILE_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_APPEND_BLOCK_EVENT"       , mysql::APPEND_BLOCK_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_EXEC_LOAD_EVENT"          , mysql::EXEC_LOAD_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_DELETE_FILE_EVENT"        , mysql::DELETE_FILE_EVENT, CONST_CS | CONST_PERSISTENT);
+
+    REGISTER_LONG_CONSTANT("BINLOG_NEW_LOAD_EVENT"           , mysql::NEW_LOAD_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_RAND_EVENT"               , mysql::RAND_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_USER_VAR_EVENT"           , mysql::USER_VAR_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_FORMAT_DESCRIPTION_EVENT" , mysql::FORMAT_DESCRIPTION_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_XID_EVENT"                , mysql::XID_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_BEGIN_LOAD_QUERY_EVENT"   , mysql::BEGIN_LOAD_QUERY_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_EXECUTE_LOAD_QUERY_EVENT" , mysql::EXECUTE_LOAD_QUERY_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_TABLE_MAP_EVENT"          , mysql::TABLE_MAP_EVENT, CONST_CS | CONST_PERSISTENT);
+
+    REGISTER_LONG_CONSTANT("BINLOG_PRE_GA_WRITE_ROWS_EVENT"  , mysql::PRE_GA_WRITE_ROWS_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_PRE_GA_UPDATE_ROWS_EVENT" , mysql::PRE_GA_UPDATE_ROWS_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_PRE_GA_DELETE_ROWS_EVENT" , mysql::PRE_GA_DELETE_ROWS_EVENT, CONST_CS | CONST_PERSISTENT);
+
+    REGISTER_LONG_CONSTANT("BINLOG_WRITE_ROWS_EVENT"         , mysql::WRITE_ROWS_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_UPDATE_ROWS_EVENT"        , mysql::UPDATE_ROWS_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_DELETE_ROWS_EVENT"        , mysql::DELETE_ROWS_EVENT, CONST_CS | CONST_PERSISTENT);
+
+    REGISTER_LONG_CONSTANT("BINLOG_INCIDENT_EVENT"           , mysql::INCIDENT_EVENT, CONST_CS | CONST_PERSISTENT);
+
+    REGISTER_LONG_CONSTANT("BINLOG_USER_DEFINED"             , mysql::USER_DEFINED, CONST_CS | CONST_PERSISTENT);
+
 	/* If you have INI entries, uncomment these lines 
-	REGISTER_INI_ENTRIES();
+    REGISTER_INI_ENTRIES();
 	*/
     le_binloglink = zend_register_list_destructors_ex(binlog_destruction_handler, NULL, BINLOG_LINK_DESC, module_number);
 	return SUCCESS;
@@ -208,7 +242,9 @@ PHP_FUNCTION(binlog_wait_for_next_event)
     add_assoc_long(return_value, "type_code", event->get_event_type());
     add_assoc_string(return_value, "type_str", (char *)get_event_type_str(event->get_event_type()), 1);
 
-    switch (event->get_event_type()) {
+    mysql::Log_event_type event_type = event->get_event_type();
+    
+    switch (event_type) {
         case mysql::QUERY_EVENT:
         {
             const mysql::Query_event *qev= static_cast<const mysql::Query_event *>(event);
@@ -252,31 +288,35 @@ PHP_FUNCTION(binlog_wait_for_next_event)
                 zval *mysql_row = NULL;
                 MAKE_STD_ZVAL(mysql_row);
                 array_init(mysql_row);
-                mysql::Log_event_type event_type = event->get_event_type();
+                
                 if (event_type == mysql::WRITE_ROWS_EVENT) {
+                    proc_event(fields, mysql_row);
+                } else if(event_type == mysql::UPDATE_ROWS_EVENT) {
+                    itor++;
+                    mysql::Row_of_fields new_fields = *itor;
+                    zval *mysql_new_row;
+                    MAKE_STD_ZVAL(mysql_new_row);
+                    array_init(mysql_new_row);
+                    // old data
+                    proc_event(fields, mysql_row);
+                    // new data
+                    proc_event(new_fields, mysql_new_row);
+                    // add new row to zval
+                    add_index_zval(mysql_rows, i++, mysql_new_row);
+                    
+                } else if(event_type == mysql::DELETE_ROWS_EVENT) {
                     proc_event(fields, mysql_row);
                 }
                 add_index_zval(mysql_rows, i++, mysql_row);
             } while (++itor != rows.end());
             
             MYSQLBINLOG_G(tmev) = NULL;
-            add_assoc_zval(return_value, "data", mysql_rows);
+            add_assoc_zval(return_value, "rows", mysql_rows);
 		}
 		break;
     }
     //delete event;
 }
-
-
-// void proc_update(mysql::Row_of_fields &old_fields, mysql::Row_of_fields &new_fields)
-// {
-
-// }
-
-// void proc_delete(mysql::Row_of_fields &fields)
-// {
-
-// }
 
 void proc_event(mysql::Row_of_fields &fields, zval *mysql_fields)
 {

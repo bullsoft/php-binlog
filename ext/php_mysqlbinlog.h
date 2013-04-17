@@ -55,10 +55,6 @@ PHP_MINFO_FUNCTION(mysqlbinlog);
 void binlog_destruction_handler(zend_rsrc_list_entry *rsrc TSRMLS_DC);
 void proc_event(mysql::Row_of_fields &fields, zval *mysql_fields);
 
-// zval * proc_insert(mysql::Row_of_fields &fields, zval *php_new_fields);
-/* void proc_delete(mysql::Row_of_fields &fields); */
-/* void proc_update(mysql::Row_of_fields &old_fields, mysql::Row_of_fields &new_fields); */
-
 PHP_FUNCTION(binlog_connect);
 PHP_FUNCTION(binlog_wait_for_next_event);
 PHP_FUNCTION(binlog_set_position);
