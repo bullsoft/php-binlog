@@ -9,7 +9,7 @@ Dependence
 =========
 * Boost (> 1.39)
 * MySQL Replication Listerner Library
-* PHP 5.3
+* PHP 5.3.X
 
 Install
 =========
