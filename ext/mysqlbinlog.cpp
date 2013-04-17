@@ -187,7 +187,9 @@ PHP_MINFO_FUNCTION(mysqlbinlog)
 {
 	php_info_print_table_start();
 	php_info_print_table_header(2, "mysqlbinlog support", "enabled");
-	php_info_print_table_row(2, "Version", PHP_MYSQLBINLOG_VERSION);    
+	php_info_print_table_row(2, "Version", PHP_MYSQLBINLOG_VERSION);
+    php_info_print_table_row(2, "Author", "Roy Gu (guweigang@baidu.com, guweigang@outlook.com)");
+    php_info_print_table_row(2, "Author", "Ideal (shangyuanchun@baidu.com, idealities@gmail.com)");    
 	php_info_print_table_end();
 
 	/* Remove comments if you have entries in php.ini
