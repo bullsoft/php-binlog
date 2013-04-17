@@ -8,9 +8,8 @@ That's what we want to do.
 Dependence
 =========
 * Boost (> 1.39)
-* stdc++
 * MySQL Replication Listerner Library
-
+* PHP 5.3
 
 Install
 =========
