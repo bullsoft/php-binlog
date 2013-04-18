@@ -242,7 +242,7 @@ PHP_FUNCTION(binlog_wait_for_next_event)
     ZEND_FETCH_RESOURCE(bp, Binary_log *, &link, id, BINLOG_LINK_DESC, le_binloglink);
 
     if (!bp) {
-        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Wrong resource handler passed to binlog_wait_for_next_event().");
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Wrong resource handler passed to binlog_wait_for_next_event().");
         RETURN_NULL();
     }
 
@@ -372,7 +372,7 @@ PHP_FUNCTION(binlog_set_position)
     ZEND_FETCH_RESOURCE(bp, Binary_log *, &link, id, BINLOG_LINK_DESC, le_binloglink);
 
     if (!bp) {
-        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Wrong resource handler passed to binlog_set_position().");
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Wrong resource handler passed to binlog_set_position().");
         RETURN_NULL();
     }
 
@@ -410,7 +410,7 @@ PHP_FUNCTION(binlog_get_position)
     ZEND_FETCH_RESOURCE(bp, Binary_log *, &link, id, BINLOG_LINK_DESC, le_binloglink);
 
     if (!bp) {
-        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Wrong resource handler passed to binlog_get_position().");
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Wrong resource handler passed to binlog_get_position().");
         RETURN_NULL();
     }
 
