@@ -110,45 +110,45 @@ static void php_mysqlbinlog_init_globals(zend_mysqlbinlog_globals *mysqlbinlog_g
  */
 PHP_MINIT_FUNCTION(mysqlbinlog)
 {
-    REGISTER_LONG_CONSTANT("BINLOG_UNKNOWN_EVENT"            , mysql::UNKNOWN_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_START_EVENT_V3"           , mysql::START_EVENT_V3, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_QUERY_EVENT"              , mysql::QUERY_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_STOP_EVENT"               , mysql::STOP_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_ROTATE_EVENT"             , mysql::ROTATE_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_INTVAR_EVENT"             , mysql::INTVAR_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_LOAD_EVENT"               , mysql::LOAD_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_SLAVE_EVENT"              , mysql::SLAVE_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_CREATE_FILE_EVENT"        , mysql::CREATE_FILE_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_APPEND_BLOCK_EVENT"       , mysql::APPEND_BLOCK_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_EXEC_LOAD_EVENT"          , mysql::EXEC_LOAD_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_DELETE_FILE_EVENT"        , mysql::DELETE_FILE_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_UNKNOWN_EVENT"            , mysql::UNKNOWN_EVENT            , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_START_EVENT_V3"           , mysql::START_EVENT_V3           , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_QUERY_EVENT"              , mysql::QUERY_EVENT              , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_STOP_EVENT"               , mysql::STOP_EVENT               , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_ROTATE_EVENT"             , mysql::ROTATE_EVENT             , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_INTVAR_EVENT"             , mysql::INTVAR_EVENT             , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_LOAD_EVENT"               , mysql::LOAD_EVENT               , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_SLAVE_EVENT"              , mysql::SLAVE_EVENT              , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_CREATE_FILE_EVENT"        , mysql::CREATE_FILE_EVENT        , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_APPEND_BLOCK_EVENT"       , mysql::APPEND_BLOCK_EVENT       , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_EXEC_LOAD_EVENT"          , mysql::EXEC_LOAD_EVENT          , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_DELETE_FILE_EVENT"        , mysql::DELETE_FILE_EVENT        , CONST_CS | CONST_PERSISTENT);
 
-    REGISTER_LONG_CONSTANT("BINLOG_NEW_LOAD_EVENT"           , mysql::NEW_LOAD_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_RAND_EVENT"               , mysql::RAND_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_USER_VAR_EVENT"           , mysql::USER_VAR_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_FORMAT_DESCRIPTION_EVENT" , mysql::FORMAT_DESCRIPTION_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_XID_EVENT"                , mysql::XID_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_BEGIN_LOAD_QUERY_EVENT"   , mysql::BEGIN_LOAD_QUERY_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_EXECUTE_LOAD_QUERY_EVENT" , mysql::EXECUTE_LOAD_QUERY_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_TABLE_MAP_EVENT"          , mysql::TABLE_MAP_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_NEW_LOAD_EVENT"           , mysql::NEW_LOAD_EVENT           , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_RAND_EVENT"               , mysql::RAND_EVENT               , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_USER_VAR_EVENT"           , mysql::USER_VAR_EVENT           , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_FORMAT_DESCRIPTION_EVENT" , mysql::FORMAT_DESCRIPTION_EVENT , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_XID_EVENT"                , mysql::XID_EVENT                , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_BEGIN_LOAD_QUERY_EVENT"   , mysql::BEGIN_LOAD_QUERY_EVENT   , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_EXECUTE_LOAD_QUERY_EVENT" , mysql::EXECUTE_LOAD_QUERY_EVENT , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_TABLE_MAP_EVENT"          , mysql::TABLE_MAP_EVENT          , CONST_CS | CONST_PERSISTENT);
 
-    REGISTER_LONG_CONSTANT("BINLOG_PRE_GA_WRITE_ROWS_EVENT"  , mysql::PRE_GA_WRITE_ROWS_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_PRE_GA_UPDATE_ROWS_EVENT" , mysql::PRE_GA_UPDATE_ROWS_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_PRE_GA_DELETE_ROWS_EVENT" , mysql::PRE_GA_DELETE_ROWS_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_PRE_GA_WRITE_ROWS_EVENT"  , mysql::PRE_GA_WRITE_ROWS_EVENT  , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_PRE_GA_UPDATE_ROWS_EVENT" , mysql::PRE_GA_UPDATE_ROWS_EVENT , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_PRE_GA_DELETE_ROWS_EVENT" , mysql::PRE_GA_DELETE_ROWS_EVENT , CONST_CS | CONST_PERSISTENT);
 
-    REGISTER_LONG_CONSTANT("BINLOG_WRITE_ROWS_EVENT"         , mysql::WRITE_ROWS_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_UPDATE_ROWS_EVENT"        , mysql::UPDATE_ROWS_EVENT, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("BINLOG_DELETE_ROWS_EVENT"        , mysql::DELETE_ROWS_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_WRITE_ROWS_EVENT"         , mysql::WRITE_ROWS_EVENT         , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_UPDATE_ROWS_EVENT"        , mysql::UPDATE_ROWS_EVENT        , CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_DELETE_ROWS_EVENT"        , mysql::DELETE_ROWS_EVENT        , CONST_CS | CONST_PERSISTENT);
 
-    REGISTER_LONG_CONSTANT("BINLOG_INCIDENT_EVENT"           , mysql::INCIDENT_EVENT, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_INCIDENT_EVENT"           , mysql::INCIDENT_EVENT           , CONST_CS | CONST_PERSISTENT);
 
-    REGISTER_LONG_CONSTANT("BINLOG_USER_DEFINED"             , mysql::USER_DEFINED, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("BINLOG_USER_DEFINED"             , mysql::USER_DEFINED             , CONST_CS | CONST_PERSISTENT);
 
-	/* If you have INI entries, uncomment these lines 
+    /* If you have INI entries, uncomment these lines 
     REGISTER_INI_ENTRIES();
-	*/
+    */
     le_binloglink = zend_register_list_destructors_ex(binlog_destruction_handler, NULL, BINLOG_LINK_DESC, module_number);
-	return SUCCESS;
+    return SUCCESS;
 }
 /* }}} */
 
@@ -185,16 +185,16 @@ PHP_RSHUTDOWN_FUNCTION(mysqlbinlog)
  */
 PHP_MINFO_FUNCTION(mysqlbinlog)
 {
-	php_info_print_table_start();
-	php_info_print_table_header(2, "mysqlbinlog support", "enabled");
-	php_info_print_table_row(2, "Version", PHP_MYSQLBINLOG_VERSION);
+    php_info_print_table_start();
+    php_info_print_table_header(2, "mysqlbinlog support", "enabled");
+    php_info_print_table_row(2, "Version", PHP_MYSQLBINLOG_VERSION);
     php_info_print_table_row(2, "Author", "Roy Gu (guweigang@baidu.com, guweigang@outlook.com)");
     php_info_print_table_row(2, "Author", "Ideal (shangyuanchun@baidu.com, idealities@gmail.com)");    
-	php_info_print_table_end();
+    php_info_print_table_end();
 
-	/* Remove comments if you have entries in php.ini
-	DISPLAY_INI_ENTRIES();
-	*/
+    /* Remove comments if you have entries in php.ini
+    DISPLAY_INI_ENTRIES();
+    */
 }
 /* }}} */
 
@@ -208,13 +208,13 @@ void binlog_destruction_handler(zend_rsrc_list_entry *rsrc TSRMLS_DC)
 
 PHP_FUNCTION(binlog_connect)
 {
-	char *arg = NULL;
-	int  arg_len;
+    char *arg = NULL;
+    int  arg_len;
     Binary_log *bp;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &arg, &arg_len) == FAILURE) {
-		RETURN_NULL();
-	}
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &arg, &arg_len) == FAILURE) {
+        RETURN_NULL();
+    }
     bp = new Binary_log (create_transport(arg));
     if(bp->connect()) {
         php_error_docref(NULL TSRMLS_CC, E_WARNING, "Connect to mysql failed: %s", arg);
@@ -231,9 +231,9 @@ PHP_FUNCTION(binlog_wait_for_next_event)
     Binary_log *bp;
     Binary_log_event *event;
     
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &link) == FAILURE) {
-		RETURN_NULL();
-	}
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &link) == FAILURE) {
+        RETURN_NULL();
+    }
 
     ZEND_FETCH_RESOURCE(bp, Binary_log *, &link, id, BINLOG_LINK_DESC, le_binloglink);
 
@@ -258,7 +258,7 @@ PHP_FUNCTION(binlog_wait_for_next_event)
         {
             const mysql::Query_event *qev= static_cast<const mysql::Query_event *>(event);
             add_assoc_string(return_value, "query", (char *)(qev->query).c_str(), 1);
-            add_assoc_string(return_value, "dbname", (char *)(qev->db_name).c_str(), 1);
+            add_assoc_string(return_value, "db_name", (char *)(qev->db_name).c_str(), 1);
         }
         break;
         case mysql::ROTATE_EVENT:
@@ -268,19 +268,19 @@ PHP_FUNCTION(binlog_wait_for_next_event)
             add_assoc_long(return_value, "position", rot->binlog_pos);
         }
         break;
-		case mysql::TABLE_MAP_EVENT:
-		{
+        case mysql::TABLE_MAP_EVENT:
+        {
             MYSQLBINLOG_G(tmev) = static_cast<mysql::Table_map_event *>(event);
             
             add_assoc_string(return_value, "db_name", (char *) MYSQLBINLOG_G(tmev)->db_name.c_str(), 1);            
             add_assoc_long(return_value, "table_id", MYSQLBINLOG_G(tmev)->table_id);
             add_assoc_string(return_value, "table_name", (char *) MYSQLBINLOG_G(tmev)->table_name.c_str(), 1);
-		}
-		break;
-		case mysql::WRITE_ROWS_EVENT:
-		case mysql::UPDATE_ROWS_EVENT:
-		case mysql::DELETE_ROWS_EVENT:
-		{
+        }
+        break;
+        case mysql::WRITE_ROWS_EVENT:
+        case mysql::UPDATE_ROWS_EVENT:
+        case mysql::DELETE_ROWS_EVENT:
+        {
             zval *mysql_rows = NULL;
             MAKE_STD_ZVAL(mysql_rows);
             array_init(mysql_rows);
@@ -322,7 +322,7 @@ PHP_FUNCTION(binlog_wait_for_next_event)
                 add_index_zval(mysql_rows, i++, mysql_row);
             } while (++itor != rows.end());
 
-            // Ensure this is the right place to delete table map event.
+            // ensure this is the right place to delete table map event.
             delete MYSQLBINLOG_G(tmev);
             MYSQLBINLOG_G(tmev) = NULL;
             add_assoc_zval(return_value, "rows", mysql_rows);
@@ -361,9 +361,9 @@ PHP_FUNCTION(binlog_set_position)
     int result, id = -1; long position;
     Binary_log *bp;
     
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl|z!", &link, &position, &file) == FAILURE) {
-		RETURN_NULL();
-	}
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl|z!", &link, &position, &file) == FAILURE) {
+        RETURN_NULL();
+    }
 
     ZEND_FETCH_RESOURCE(bp, Binary_log *, &link, id, BINLOG_LINK_DESC, le_binloglink);
 
@@ -371,7 +371,6 @@ PHP_FUNCTION(binlog_set_position)
         php_error_docref(NULL TSRMLS_CC, E_ERROR, "Wrong resource handler passed to binlog_set_position().");
         RETURN_NULL();
     }
-
 
     if (!file) {
         result = bp->set_position(position);
@@ -400,9 +399,9 @@ PHP_FUNCTION(binlog_get_position)
     int id = -1;
     Binary_log *bp;
     
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r|z", &link, &file) == FAILURE) {
-		RETURN_NULL();
-	}
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r|z", &link, &file) == FAILURE) {
+        RETURN_NULL();
+    }
 
     ZEND_FETCH_RESOURCE(bp, Binary_log *, &link, id, BINLOG_LINK_DESC, le_binloglink);
 
