@@ -198,6 +198,9 @@ PHP_MINFO_FUNCTION(mysqlbinlog)
 }
 /* }}} */
 
+/* this function is called when request shutdown */
+/* {{{ binlog_destruction_handler
+ */
 void binlog_destruction_handler(zend_rsrc_list_entry *rsrc TSRMLS_DC)
 {
     Binary_log *bp = (Binary_log *)rsrc->ptr;
@@ -205,6 +208,7 @@ void binlog_destruction_handler(zend_rsrc_list_entry *rsrc TSRMLS_DC)
         delete bp;
     }
 }
+/* }}} */
 
 PHP_FUNCTION(binlog_connect)
 {
