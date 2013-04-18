@@ -23,6 +23,8 @@ make install
 
 Example
 ==========
+注：Binlog为行格式
+
 ```php
 $link = binlog_connect("mysql://root@127.0.0.1:3306");
 // binlog_set_position($link, 4);                           
@@ -221,5 +223,5 @@ Reference
 MySQL Replication Listener:
 
 http://cdn.oreillystatic.com/en/assets/1/event/61/Binary%20log%20API_%20A%20Library%20for%20Change%20Data%20Capture%20using%20MySQL%20Presentation.pdf
-
+http://dev.mysql.com/doc/internals/en/index.html
 
