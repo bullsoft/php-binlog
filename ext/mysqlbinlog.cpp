@@ -226,19 +226,20 @@ PHP_FUNCTION(binlog_connect)
 
 PHP_FUNCTION(binlog_wait_for_next_event)
 {
-    zval *link;
-    int id = -1;
+    zval *link; int id = -1;
+    char *db = NULL, *tbl = NULL;
+    int db_len, tbl_len;
     Binary_log *bp;
     Binary_log_event *event;
     
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &link) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r|ss", &link, &db, &db_len, &tbl, &tbl_len) == FAILURE) {
         RETURN_NULL();
     }
 
     ZEND_FETCH_RESOURCE(bp, Binary_log *, &link, id, BINLOG_LINK_DESC, le_binloglink);
 
     if (!bp) {
-        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Wrong resource handler passed to binlog_wait_for_next_event().");
+        php_error_docref(NULL TSRMLS_CC, E_ERROR, "Wrong resource handler passed to binlog_wait_for_next_event()");
         RETURN_NULL();
     }
 
@@ -246,11 +247,12 @@ PHP_FUNCTION(binlog_wait_for_next_event)
     
     if (result == ERR_EOF) RETURN_NULL();
 
+    // array initial
     array_init(return_value);
     
     add_assoc_long(return_value, "type_code", event->get_event_type());
     add_assoc_string(return_value, "type_str", (char *)get_event_type_str(event->get_event_type()), 1);
-
+    
     mysql::Log_event_type event_type = event->get_event_type();
     
     switch (event_type) {
@@ -281,15 +283,22 @@ PHP_FUNCTION(binlog_wait_for_next_event)
         case mysql::UPDATE_ROWS_EVENT:
         case mysql::DELETE_ROWS_EVENT:
         {
+            add_assoc_string(return_value, "db_name", (char *) MYSQLBINLOG_G(tmev)->db_name.c_str(), 1);            
+            add_assoc_string(return_value, "table_name", (char *) MYSQLBINLOG_G(tmev)->table_name.c_str(), 1);
+
+            if(db != NULL && strcmp(db, (char *) MYSQLBINLOG_G(tmev)->db_name.c_str())) {
+                break;
+            }
+            
+            if(tbl != NULL && strcmp(tbl, (char *) MYSQLBINLOG_G(tmev)->table_name.c_str())) {
+                break;
+            }
+            
             zval *mysql_rows = NULL;
             MAKE_STD_ZVAL(mysql_rows);
             array_init(mysql_rows);
             
             mysql::Row_event *rev= static_cast<mysql::Row_event *>(event);
-            
-            // add_assoc_long(return_value, "table_id", rev->table_id);
-            add_assoc_string(return_value, "db_name", (char *) MYSQLBINLOG_G(tmev)->db_name.c_str(), 1);            
-            add_assoc_string(return_value, "table_name", (char *) MYSQLBINLOG_G(tmev)->table_name.c_str(), 1);
             
             mysql::Row_event_set rows(rev, MYSQLBINLOG_G(tmev));
             mysql::Row_event_set::iterator itor = rows.begin();
