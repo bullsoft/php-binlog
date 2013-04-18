@@ -23,6 +23,8 @@ make install
 
 Example
 ==========
+注：Binlog为行格式
+
 ```php
 $link = binlog_connect("mysql://root@127.0.0.1:3306");
 // binlog_set_position($link, 4);                           
