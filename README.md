@@ -5,6 +5,11 @@ A PHP-Client for mysql replication listener API.
 
 That's what we want to do.
 
+Background
+==========
+
+https://coderwall.com/p/levwcw
+
 Dependence
 =========
 * Boost (> 1.39)
