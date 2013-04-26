@@ -231,3 +231,12 @@ http://dev.mysql.com/doc/internals/en/index.html
 
 
 [![endorse](https://api.coderwall.com/cnwggu/endorsecount.png)](https://coderwall.com/cnwggu)
+
+
+
+Feedback
+-------------------------
+
+Issues and contributions are welcome.
+
+Thank you!
