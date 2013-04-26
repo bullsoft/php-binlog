@@ -3,31 +3,30 @@ PHP Binlog
 
 A PHP-Client for mysql replication listener API.
 
-That's what we want to do.
+You can use it to connect to a MYSQL server which produces BINLOG, and get BINLOG events in real-time, just like a Async-Trigger.
 
-Background
-==========
+You know, we always need to use different components to do a good job, serve a good service. Just like we use MYSQL to storage all our data, use REDIS as a cache server, and use LUCENE as a search engine. The differences between MYSQL and other components will affect the sorting result, and therefore affect user experience, especially for time-sensitive service.
 
-https://coderwall.com/p/levwcw
+Our group use PHP to develop web projects. So if we have a PHP extension to do the data trigger job between different components, everything will be easy. This is what we do and why we do.
 
 Dependence
-=========
+--------------------
 * Boost (> 1.39)
 * MySQL Replication Listerner Library
 * PHP 5.3.X
 
 Install
-=========
-/home/work/local/php/bin/phpize
+--------------------
+$ /home/work/local/php/bin/phpize
 
-./confingure --with-php-config=/home/work/local/php/bin/php-config --with-mysqlbinlog=yes --with-boost=/home/work/boost --with-mysql-replication=/home/work/mysql-replication
+$ ./confingure --with-php-config=/home/work/local/php/bin/php-config --with-mysqlbinlog=yes --with-boost=/home/work/boost --with-mysql-replication=/home/work/mysql-replication
 
-make
+$ make
 
-make install
+$ make install
 
 Example
-==========
+----------------
 注：Binlog为行格式
 
 ```php
@@ -176,7 +175,7 @@ array(5) {
 }
 ```
 ### Write_rows
-=======================================
+
 ```sql
 insert into type values (Null, "Hello, World", "Best world", 4, 0), (NULL, "你好，世界", "世界很美好", 3, 5);
 ```
@@ -224,7 +223,7 @@ array(5) {
 ```
 
 Reference
-========
+--------------------
 MySQL Replication Listener:
 
 http://cdn.oreillystatic.com/en/assets/1/event/61/Binary%20log%20API_%20A%20Library%20for%20Change%20Data%20Capture%20using%20MySQL%20Presentation.pdf
