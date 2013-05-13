@@ -11,12 +11,18 @@ Our group use PHP to develop web projects. So if we have a PHP extension to do t
 
 Dependence
 --------------------
-* Boost (> 1.39)
-* MySQL Replication Listerner Library
+* MySQL Replication Listerner Library (https://github.com/BullSoft/mysql-replication-listener)
 * PHP 5.3.X
 
 Install
 --------------------
+First, install mysql-replication-dir.
+$ cmake .
+
+$ make
+
+Then change to php-binlog ext directory, 
+
 $ /home/work/local/php/bin/phpize
 
 $ ./confingure --with-php-config=/home/work/local/php/bin/php-config --with-mysqlbinlog=yes --with-boost=/home/work/boost --with-mysql-replication=/home/work/mysql-replication
