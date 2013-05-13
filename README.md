@@ -16,7 +16,7 @@ Dependence
 
 Install
 --------------------
-First, install mysql-replication-dir.
+First, install mysql-replication-listener.
 
 $ cmake .
 
