@@ -148,6 +148,8 @@ PHP_MINIT_FUNCTION(mysqlbinlog)
     REGISTER_INI_ENTRIES();
     */
     le_binloglink = zend_register_list_destructors_ex(binlog_destruction_handler, NULL, BINLOG_LINK_DESC, module_number);
+    MYSQLBINLOG_G(tmev) = NULL;
+
     return SUCCESS;
 }
 /* }}} */
@@ -276,6 +278,11 @@ PHP_FUNCTION(binlog_wait_for_next_event)
         break;
         case mysql::TABLE_MAP_EVENT:
         {
+            // ensure this is the right place to delete table map event.
+            if (MYSQLBINLOG_G(tmev)) {
+                delete MYSQLBINLOG_G(tmev);
+                MYSQLBINLOG_G(tmev) = NULL;
+            }
             MYSQLBINLOG_G(tmev) = static_cast<mysql::Table_map_event *>(event);
             
             add_assoc_string(return_value, "db_name", (char *) MYSQLBINLOG_G(tmev)->db_name.c_str(), 1);            
@@ -335,9 +342,6 @@ PHP_FUNCTION(binlog_wait_for_next_event)
                 add_index_zval(mysql_rows, i++, mysql_row);
             } while (++itor != rows.end());
 
-            // ensure this is the right place to delete table map event.
-            delete MYSQLBINLOG_G(tmev);
-            MYSQLBINLOG_G(tmev) = NULL;
             add_assoc_zval(return_value, "rows", mysql_rows);
 		}
 		break;
