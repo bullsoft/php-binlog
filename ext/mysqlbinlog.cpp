@@ -360,6 +360,8 @@ void proc_event(mysql::Row_of_fields &fields, zval *mysql_fields)
           add_index_double(mysql_fields, i++, itor->as_float());
       } else if (type == mysql::system::MYSQL_TYPE_DOUBLE) {
           add_index_double(mysql_fields, i++, itor->as_double());
+      } else if (type == mysql::system::MYSQL_TYPE_LONG) {
+          add_index_long(mysql_fields, i++, itor->as_int32());
       } else {
           std::string out;
           converter.to(out, *itor);
