@@ -438,9 +438,8 @@ PHP_FUNCTION(binlog_get_position)
 
 /*
  * Local variables:
- * tab-width: 4
  * c-basic-offset: 4
  * End:
- * vim600: noet sw=4 ts=4
- * vim<600: noet sw=4 ts=4
+ * vim600: et sw=4 ts=4
+ * vim<600: et sw=4 ts=4
  */
