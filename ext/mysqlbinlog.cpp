@@ -43,6 +43,11 @@ ZEND_DECLARE_MODULE_GLOBALS(mysqlbinlog)
 
 /* True global resources - no need for thread safety here */
 #define BINLOG_LINK_DESC "MySQL Binlog 连接句柄"
+static void php_mysqlbinlog_init_globals(zend_mysqlbinlog_globals *mysqlbinlog_globals)
+{
+    mysqlbinlog_globals->tmev = NULL;
+}
+
 
 static int le_binloglink;
 
@@ -148,8 +153,9 @@ PHP_MINIT_FUNCTION(mysqlbinlog)
     REGISTER_INI_ENTRIES();
     */
     le_binloglink = zend_register_list_destructors_ex(binlog_destruction_handler, NULL, BINLOG_LINK_DESC, module_number);
-    MYSQLBINLOG_G(tmev) = NULL;
 
+    ZEND_INIT_MODULE_GLOBALS(mysqlbinlog, php_mysqlbinlog_init_globals, NULL);
+    
     return SUCCESS;
 }
 /* }}} */
@@ -260,7 +266,7 @@ PHP_FUNCTION(binlog_wait_for_next_event)
     add_assoc_string(return_value, "type_str", (char *)get_event_type_str(event->get_event_type()), 1);
     
     mysql::Log_event_type event_type = event->get_event_type();
-    
+
     switch (event_type) {
         case mysql::QUERY_EVENT:
         {
@@ -279,29 +285,37 @@ PHP_FUNCTION(binlog_wait_for_next_event)
         case mysql::TABLE_MAP_EVENT:
         {
             // ensure this is the right place to delete table map event.
+            TSRMLS_FETCH();            
             if (MYSQLBINLOG_G(tmev)) {
-                delete MYSQLBINLOG_G(tmev);
+                delete(MYSQLBINLOG_G(tmev));
                 MYSQLBINLOG_G(tmev) = NULL;
             }
-            MYSQLBINLOG_G(tmev) = static_cast<mysql::Table_map_event *>(event);
+            MYSQLBINLOG_G(tmev)  = static_cast<mysql::Table_map_event *>(event);
+
+            tbl_map_evt _table_map_event;
+            _table_map_event = MYSQLBINLOG_G(tmev);
             
-            add_assoc_string(return_value, "db_name", (char *) MYSQLBINLOG_G(tmev)->db_name.c_str(), 1);            
-            add_assoc_long(return_value, "table_id", MYSQLBINLOG_G(tmev)->table_id);
-            add_assoc_string(return_value, "table_name", (char *) MYSQLBINLOG_G(tmev)->table_name.c_str(), 1);
+            add_assoc_string(return_value, "db_name", (char *) _table_map_event->db_name.c_str(), 1);            
+            add_assoc_long(return_value, "table_id", _table_map_event->table_id);
+            add_assoc_string(return_value, "table_name", (char *) _table_map_event->table_name.c_str(), 1);
         }
         break;
         case mysql::WRITE_ROWS_EVENT:
         case mysql::UPDATE_ROWS_EVENT:
         case mysql::DELETE_ROWS_EVENT:
         {
-            add_assoc_string(return_value, "db_name", (char *) MYSQLBINLOG_G(tmev)->db_name.c_str(), 1);            
-            add_assoc_string(return_value, "table_name", (char *) MYSQLBINLOG_G(tmev)->table_name.c_str(), 1);
+            TSRMLS_FETCH();            
+            tbl_map_evt _table_map_event;
+            _table_map_event = MYSQLBINLOG_G(tmev);
+            
+            add_assoc_string(return_value, "db_name", (char *) _table_map_event->db_name.c_str(), 1);            
+            add_assoc_string(return_value, "table_name", (char *) _table_map_event->table_name.c_str(), 1);
 
-            if(db != NULL && strcmp(db, (char *) MYSQLBINLOG_G(tmev)->db_name.c_str())) {
+            if(db != NULL && strcmp(db, (char *) _table_map_event->db_name.c_str())) {
                 break;
             }
             
-            if(tbl != NULL && strcmp(tbl, (char *) MYSQLBINLOG_G(tmev)->table_name.c_str())) {
+            if(tbl != NULL && strcmp(tbl, (char *) _table_map_event->table_name.c_str())) {
                 break;
             }
             
@@ -310,8 +324,7 @@ PHP_FUNCTION(binlog_wait_for_next_event)
             array_init(mysql_rows);
             
             mysql::Row_event *rev= static_cast<mysql::Row_event *>(event);
-            
-            mysql::Row_event_set rows(rev, MYSQLBINLOG_G(tmev));
+            mysql::Row_event_set rows(rev, _table_map_event);
             mysql::Row_event_set::iterator itor = rows.begin();
             
             int i=0;
