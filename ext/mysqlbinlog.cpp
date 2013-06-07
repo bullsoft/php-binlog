@@ -155,7 +155,7 @@ PHP_MINIT_FUNCTION(mysqlbinlog)
     le_binloglink = zend_register_list_destructors_ex(binlog_destruction_handler, NULL, BINLOG_LINK_DESC, module_number);
 
     ZEND_INIT_MODULE_GLOBALS(mysqlbinlog, php_mysqlbinlog_init_globals, NULL);
-    
+
     return SUCCESS;
 }
 /* }}} */
@@ -285,17 +285,15 @@ PHP_FUNCTION(binlog_wait_for_next_event)
         case mysql::TABLE_MAP_EVENT:
         {
             // ensure this is the right place to delete table map event.
-            TSRMLS_FETCH();            
             if (MYSQLBINLOG_G(tmev)) {
-                delete(MYSQLBINLOG_G(tmev));
+                delete MYSQLBINLOG_G(tmev);
                 MYSQLBINLOG_G(tmev) = NULL;
             }
-            MYSQLBINLOG_G(tmev)  = static_cast<mysql::Table_map_event *>(event);
+            MYSQLBINLOG_G(tmev) = static_cast<mysql::Table_map_event *>(event);
 
-            tbl_map_evt _table_map_event;
-            _table_map_event = MYSQLBINLOG_G(tmev);
+            tbl_map_evt _table_map_event = MYSQLBINLOG_G(tmev);
             
-            add_assoc_string(return_value, "db_name", (char *) _table_map_event->db_name.c_str(), 1);            
+            add_assoc_string(return_value, "db_name", (char *) _table_map_event->db_name.c_str(), 1);
             add_assoc_long(return_value, "table_id", _table_map_event->table_id);
             add_assoc_string(return_value, "table_name", (char *) _table_map_event->table_name.c_str(), 1);
         }
@@ -304,9 +302,7 @@ PHP_FUNCTION(binlog_wait_for_next_event)
         case mysql::UPDATE_ROWS_EVENT:
         case mysql::DELETE_ROWS_EVENT:
         {
-            TSRMLS_FETCH();            
-            tbl_map_evt _table_map_event;
-            _table_map_event = MYSQLBINLOG_G(tmev);
+            tbl_map_evt _table_map_event = MYSQLBINLOG_G(tmev);
             
             add_assoc_string(return_value, "db_name", (char *) _table_map_event->db_name.c_str(), 1);            
             add_assoc_string(return_value, "table_name", (char *) _table_map_event->table_name.c_str(), 1);
