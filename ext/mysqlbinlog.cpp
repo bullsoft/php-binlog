@@ -41,6 +41,11 @@ using mysql::User_var_event;
 
 ZEND_DECLARE_MODULE_GLOBALS(mysqlbinlog)
 
+ZEND_BEGIN_ARG_INFO(arginfo_get_position, 0)
+ZEND_ARG_INFO(1, file)
+ZEND_END_ARG_INFO()
+
+
 /* True global resources - no need for thread safety here */
 #define BINLOG_LINK_DESC "MySQL Binlog 连接句柄"
 static void php_mysqlbinlog_init_globals(zend_mysqlbinlog_globals *mysqlbinlog_globals)
@@ -59,8 +64,8 @@ const zend_function_entry mysqlbinlog_functions[] = {
     PHP_FE(binlog_connect, NULL)
     PHP_FE(binlog_wait_for_next_event, NULL)
     PHP_FE(binlog_set_position, NULL)
-    PHP_FE(binlog_get_position, NULL)
-	PHP_FE_END	/* Must be the last line in mysqlbinlog_functions[] */
+    PHP_FE(binlog_get_position, arginfo_get_position)
+    PHP_FE_END	/* Must be the last line in mysqlbinlog_functions[] */
 };
 /* }}} */
 
@@ -352,7 +357,7 @@ PHP_FUNCTION(binlog_wait_for_next_event)
             } while (++itor != rows.end());
 
             add_assoc_zval(return_value, "rows", mysql_rows);
-		}
+        }
 		break;
     }
     if (event_type != mysql::TABLE_MAP_EVENT) {
@@ -382,6 +387,7 @@ void proc_event(mysql::Row_of_fields &fields, zval *mysql_fields)
       } else {
           std::string out;
           converter.to(out, *itor);
+          // std::cout << "String: " << out << std::endl;
           add_index_string(mysql_fields, i++, (char *)out.c_str(), 1);
       }
   } while(++itor != fields.end());
@@ -429,6 +435,7 @@ PHP_FUNCTION(binlog_get_position)
 {
     zval *link, *file = NULL;
     int id = -1;
+    unsigned long long position;
     Binary_log *bp;
     
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r|z", &link, &file) == FAILURE) {
@@ -444,14 +451,12 @@ PHP_FUNCTION(binlog_get_position)
 
     std::string filename;
     
-    if (!file || Z_TYPE_P(file) == IS_NULL) {
+    if (!file) {
         RETURN_LONG(bp->get_position());
-    } else if (Z_TYPE_P(file) == IS_STRING) {
-        filename.assign(Z_STRVAL_P(file));
-        RETURN_LONG(bp->get_position(filename));
     } else {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "filename must be a string");
-        RETURN_FALSE;
+        position = bp->get_position(filename);
+        ZVAL_STRING(file, filename.c_str(), 1);
+        RETURN_LONG(position);
     }
 }
 
