@@ -41,8 +41,9 @@ using mysql::User_var_event;
 
 ZEND_DECLARE_MODULE_GLOBALS(mysqlbinlog)
 
-ZEND_BEGIN_ARG_INFO(arginfo_get_position, 0)
-ZEND_ARG_INFO(1, file)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_get_position, 0, 0, 0)
+ZEND_ARG_INFO(0, link)
+ZEND_ARG_INFO(1, filename)
 ZEND_END_ARG_INFO()
 
 
@@ -454,6 +455,7 @@ PHP_FUNCTION(binlog_get_position)
     if (!file) {
         RETURN_LONG(bp->get_position());
     } else {
+        zval_dtor(file);
         position = bp->get_position(filename);
         ZVAL_STRING(file, filename.c_str(), 1);
         RETURN_LONG(position);
