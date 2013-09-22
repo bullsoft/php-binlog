@@ -42,7 +42,28 @@ using mysql::User_var_event;
 
 ZEND_DECLARE_MODULE_GLOBALS(mysqlbinlog)
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_get_position, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_connect, 0, 0, 1)
+ZEND_ARG_INFO(0, connect_str)
+ZEND_ARG_INFO(0, server_id)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_disconnect, 0, 0, 1)
+ZEND_ARG_INFO(0, link)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_wait_for_next_event, 0, 0, 1)
+ZEND_ARG_INFO(0, link)
+ZEND_ARG_INFO(0, db_name)
+ZEND_ARG_INFO(0, table_name)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_set_position, 0, 0, 2)
+ZEND_ARG_INFO(0, link)
+ZEND_ARG_INFO(0, position)
+ZEND_ARG_INFO(0, filename)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_get_position, 0, 0, 1)
 ZEND_ARG_INFO(0, link)
 ZEND_ARG_INFO(1, filename)
 ZEND_END_ARG_INFO()
@@ -63,10 +84,10 @@ static int le_binloglink;
  * Every user visible function must have an entry in mysqlbinlog_functions[].
  */
 const zend_function_entry mysqlbinlog_functions[] = {
-    PHP_FE(binlog_connect, NULL)
-    PHP_FE(binlog_disconnect, NULL)    
-    PHP_FE(binlog_wait_for_next_event, NULL)
-    PHP_FE(binlog_set_position, NULL)
+    PHP_FE(binlog_connect, arginfo_connect)
+    PHP_FE(binlog_disconnect, arginfo_disconnect)    
+    PHP_FE(binlog_wait_for_next_event, arginfo_wait_for_next_event)
+    PHP_FE(binlog_set_position, arginfo_set_position)
     PHP_FE(binlog_get_position, arginfo_get_position)
     PHP_FE_END	/* Must be the last line in mysqlbinlog_functions[] */
 };
@@ -252,6 +273,9 @@ PHP_FUNCTION(binlog_disconnect)
 {
     zval *link; int id = -1;
     Binary_log *bp;
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &link) == FAILURE) {
+        RETURN_NULL();
+    }
     ZEND_FETCH_RESOURCE(bp, Binary_log *, &link, id, BINLOG_LINK_DESC, le_binloglink);
 
     if(!bp) {
