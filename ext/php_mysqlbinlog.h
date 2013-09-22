@@ -56,6 +56,7 @@ void binlog_destruction_handler(zend_rsrc_list_entry *rsrc TSRMLS_DC);
 void proc_event(mysql::Row_of_fields &fields, zval *mysql_fields);
 
 PHP_FUNCTION(binlog_connect);
+PHP_FUNCTION(binlog_disconnect);
 PHP_FUNCTION(binlog_wait_for_next_event);
 PHP_FUNCTION(binlog_set_position);
 PHP_FUNCTION(binlog_get_position);

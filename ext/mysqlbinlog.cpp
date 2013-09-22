@@ -64,6 +64,7 @@ static int le_binloglink;
  */
 const zend_function_entry mysqlbinlog_functions[] = {
     PHP_FE(binlog_connect, NULL)
+    PHP_FE(binlog_disconnect, NULL)    
     PHP_FE(binlog_wait_for_next_event, NULL)
     PHP_FE(binlog_set_position, NULL)
     PHP_FE(binlog_get_position, arginfo_get_position)
@@ -220,6 +221,7 @@ void binlog_destruction_handler(zend_rsrc_list_entry *rsrc TSRMLS_DC)
 {
     Binary_log *bp = (Binary_log *)rsrc->ptr;
     if (bp) {
+        bp->disconnect();
         delete bp;
     }
 }
@@ -228,17 +230,35 @@ void binlog_destruction_handler(zend_rsrc_list_entry *rsrc TSRMLS_DC)
 PHP_FUNCTION(binlog_connect)
 {
     char *arg = NULL;
-    int  arg_len;
+    int arg_len;
+    int server_id=1;
     Binary_log *bp;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &arg, &arg_len) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l", &arg, &arg_len, &server_id) == FAILURE) {
         RETURN_NULL();
     }
     bp = new Binary_log (create_transport(arg));
+    if(server_id < 0) {
+        server_id = 1;
+    }
+    bp->set_server_id(server_id);
     if(bp->connect()) {
         zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Connect to mysql failed", 0 TSRMLS_CC);
     }
     ZEND_REGISTER_RESOURCE(return_value, bp, le_binloglink);
+}
+
+PHP_FUNCTION(binlog_disconnect)
+{
+    zval *link; int id = -1;
+    Binary_log *bp;
+    ZEND_FETCH_RESOURCE(bp, Binary_log *, &link, id, BINLOG_LINK_DESC, le_binloglink);
+
+    if(!bp) {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Wrong resource handler passed to binlog_wait_for_next_event().");
+        RETURN_NULL();        
+    }
+    bp->disconnect();
 }
 
 PHP_FUNCTION(binlog_wait_for_next_event)
