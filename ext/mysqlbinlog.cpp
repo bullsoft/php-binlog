@@ -29,6 +29,7 @@ extern "C" {
 }
 
 #include "php_mysqlbinlog.h"
+#include "zend_exceptions.h"
 
 #include <iostream>
 #include <map>
@@ -235,10 +236,8 @@ PHP_FUNCTION(binlog_connect)
     }
     bp = new Binary_log (create_transport(arg));
     if(bp->connect()) {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Connect to mysql failed: %s", arg);
-        RETURN_FALSE;
+        zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Connect to mysql failed", 0 TSRMLS_CC);
     }
-
     ZEND_REGISTER_RESOURCE(return_value, bp, le_binloglink);
 }
 
