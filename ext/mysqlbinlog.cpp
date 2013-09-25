@@ -393,7 +393,7 @@ PHP_FUNCTION(binlog_wait_for_next_event)
                     proc_event(new_fields, mysql_new_row);
                     // add new row to zval
                     add_index_zval(mysql_rows, i++, mysql_new_row);
-                    
+
                 } else if(event_type == mysql::DELETE_ROWS_EVENT) {
                     proc_event(fields, mysql_row);
                 }
@@ -402,7 +402,7 @@ PHP_FUNCTION(binlog_wait_for_next_event)
 
             add_assoc_zval(return_value, "rows", mysql_rows);
         }
-		break;
+        break;
     }
     if (event_type != mysql::TABLE_MAP_EVENT) {
         delete event;
