@@ -356,12 +356,25 @@ PHP_FUNCTION(binlog_wait_for_next_event)
             add_assoc_string(return_value, "db_name", (char *) _table_map_event->db_name.c_str(), 1);            
             add_assoc_string(return_value, "table_name", (char *) _table_map_event->table_name.c_str(), 1);
 
+            // @TODO: replication ignore dbs
             if(db != NULL && strcmp(db, (char *) _table_map_event->db_name.c_str())) {
                 break;
             }
-            
-            if(tbl != NULL && strcmp(tbl, (char *) _table_map_event->table_name.c_str())) {
-                break;
+            // replication wild ignore tables
+            if(tbl != NULL) {
+                if(tbl[tbl_len-1] == '*') {
+                    char tbl_prefix[tbl_len-1];
+                    strncpy(tbl_prefix, tbl, tbl_len-2);
+                    tbl_prefix[tbl_len-1] = 0;
+                    std::size_t found = _table_map_event->table_name.find(tbl_prefix);
+                    if(std::string::npos == found) {
+                        break;
+                    } else {
+                        // nothing to do
+                    }
+                } else if(strcmp(tbl, (char *) _table_map_event->table_name.c_str())) {
+                    break;
+                }
             }
             
             zval *mysql_rows = NULL;
