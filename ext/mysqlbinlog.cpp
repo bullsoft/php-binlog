@@ -288,12 +288,13 @@ PHP_FUNCTION(binlog_disconnect)
 PHP_FUNCTION(binlog_wait_for_next_event)
 {
     zval *link; int id = -1;
-    char *db = NULL, *tbl = NULL;
-    int db_len, tbl_len;
+    char *db = NULL;
+    zval *tbl_zval_p = NULL;
+    int db_len;
     Binary_log *bp;
     Binary_log_event *event;
     
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r|ss", &link, &db, &db_len, &tbl, &tbl_len) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r|sz", &link, &db, &db_len, &tbl_zval_p) == FAILURE) {
         RETURN_NULL();
     }
 
@@ -360,20 +361,42 @@ PHP_FUNCTION(binlog_wait_for_next_event)
             if(db != NULL && strcmp(db, (char *) _table_map_event->db_name.c_str())) {
                 break;
             }
-            // replication wild ignore tables
-            if(tbl != NULL) {
-                if(tbl[tbl_len-1] == '*') {
-                    char tbl_prefix[tbl_len-1];
-                    strncpy(tbl_prefix, tbl, tbl_len-2);
-                    tbl_prefix[tbl_len-1] = 0;
-                    std::size_t found = _table_map_event->table_name.find(tbl_prefix);
-                    if(std::string::npos == found) {
+            // replication wild **watch** tables
+            if(tbl_zval_p != NULL) {
+                if(Z_TYPE_P(tbl_zval_p) == IS_STRING) {
+                    // printf("table string given:\t%s\n", Z_STRVAL_P(tbl_zval_p));
+                    if(!in_watch_wild_tables(Z_STRVAL_P(tbl_zval_p),
+                                             Z_STRLEN_P(tbl_zval_p),
+                                             _table_map_event->table_name TSRMLS_CC)) {
                         break;
-                    } else {
-                        // nothing to do
                     }
-                } else if(strcmp(tbl, (char *) _table_map_event->table_name.c_str())) {
-                    break;
+                } else if(Z_TYPE_P(tbl_zval_p) == IS_ARRAY) {
+                    zval **tbl_pp;
+                    bool needWatch = false;
+                    HashPosition array_pointer;
+                    for (zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(tbl_zval_p), &array_pointer);
+                         zend_hash_get_current_data_ex(Z_ARRVAL_P(tbl_zval_p), (void **)&tbl_pp, &array_pointer) == SUCCESS;
+                         zend_hash_move_forward_ex(Z_ARRVAL_P(tbl_zval_p), &array_pointer)) {
+                        if(Z_TYPE_PP(tbl_pp) != IS_STRING) {
+                            zend_throw_exception(zend_exception_get_default(TSRMLS_C),
+                                                 "Table name should be an array of strings",
+                                                 0 TSRMLS_CC);                            
+                        }
+                        convert_to_string_ex(tbl_pp);
+                        // printf("table need watch %s\n", Z_STRVAL_PP(tbl_pp));
+                        if(in_watch_wild_tables(Z_STRVAL_PP(tbl_pp),
+                                                Z_STRLEN_PP(tbl_pp),
+                                                _table_map_event->table_name TSRMLS_CC)) {
+                            // printf("find it: %s\n", Z_STRVAL_PP(tbl_pp));
+                            needWatch = true;
+                            break;
+                        }
+                    }
+                    if(!needWatch) break;
+                } else {
+                    zend_throw_exception(zend_exception_get_default(TSRMLS_C),
+                                         "Only string and array of strings are accepted",
+                                         0 TSRMLS_CC);
                 }
             }
             
@@ -516,6 +539,25 @@ PHP_FUNCTION(binlog_get_position)
         ZVAL_STRING(file, filename.c_str(), 1);
         RETURN_LONG(position);
     }
+}
+
+bool in_watch_wild_tables(char* tbl, int tbl_len, std::string tbl_given TSRMLS_DC)
+{
+    // printf("table :\t%s\tlen: %d\n", tbl, tbl_len);
+    if(tbl[tbl_len-1] == '*') {
+        char tbl_prefix[tbl_len-1];
+        strncpy(tbl_prefix, tbl, tbl_len-1);
+        tbl_prefix[tbl_len-1] = '\0';
+        // printf("table prefix:\t%s\n", tbl_prefix);
+        // printf("table given:\t%s\n", tbl_given.c_str());
+        std::size_t found = tbl_given.find(tbl_prefix);
+        if(std::string::npos == found) {
+            return false;
+        } 
+    } else if(strcmp(tbl, (char *) tbl_given.c_str())) {
+        return false;
+    }
+    return true;
 }
 
 /*

@@ -54,6 +54,7 @@ PHP_MINFO_FUNCTION(mysqlbinlog);
 
 void binlog_destruction_handler(zend_rsrc_list_entry *rsrc TSRMLS_DC);
 void proc_event(mysql::Row_of_fields &fields, zval *mysql_fields);
+bool in_watch_wild_tables(char* tbl, int tbl_len, std::string tbl_given TSRMLS_DC);
 
 PHP_FUNCTION(binlog_connect);
 PHP_FUNCTION(binlog_disconnect);
