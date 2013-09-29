@@ -53,8 +53,8 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_wait_for_next_event, 0, 0, 1)
 ZEND_ARG_INFO(0, link)
-ZEND_ARG_INFO(0, db_name)
-ZEND_ARG_INFO(0, table_name)
+ZEND_ARG_INFO(0, db_watch_list)
+ZEND_ARG_INFO(0, table_wild_watch_list)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_set_position, 0, 0, 2)
@@ -279,8 +279,9 @@ PHP_FUNCTION(binlog_disconnect)
     ZEND_FETCH_RESOURCE(bp, Binary_log *, &link, id, BINLOG_LINK_DESC, le_binloglink);
 
     if(!bp) {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Wrong resource handler passed to binlog_wait_for_next_event().");
-        RETURN_NULL();        
+        zend_throw_exception(zend_exception_get_default(TSRMLS_C),
+                             "Wrong resource handler passed to binlog_disconnect",
+                             0 TSRMLS_CC);        
     }
     bp->disconnect();
 }
@@ -288,21 +289,21 @@ PHP_FUNCTION(binlog_disconnect)
 PHP_FUNCTION(binlog_wait_for_next_event)
 {
     zval *link; int id = -1;
-    char *db = NULL;
+    zval *db_zval_p  = NULL;
     zval *tbl_zval_p = NULL;
-    int db_len;
     Binary_log *bp;
     Binary_log_event *event;
     
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r|sz", &link, &db, &db_len, &tbl_zval_p) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r|zz", &link, &db_zval_p, &tbl_zval_p) == FAILURE) {
         RETURN_NULL();
     }
 
     ZEND_FETCH_RESOURCE(bp, Binary_log *, &link, id, BINLOG_LINK_DESC, le_binloglink);
 
     if (!bp) {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "Wrong resource handler passed to binlog_wait_for_next_event().");
-        RETURN_NULL();
+        zend_throw_exception(zend_exception_get_default(TSRMLS_C),
+                             "Wrong resource handler passed to binlog_wait_for_next_event()",
+                             0 TSRMLS_CC);
     }
 
     int result = bp->wait_for_next_event(&event);
@@ -344,7 +345,7 @@ PHP_FUNCTION(binlog_wait_for_next_event)
             tbl_map_evt _table_map_event = MYSQLBINLOG_G(tmev);
             
             add_assoc_string(return_value, "db_name", (char *) _table_map_event->db_name.c_str(), 1);
-            add_assoc_long(return_value, "table_id", _table_map_event->table_id);
+            add_assoc_long(return_value,   "table_id", _table_map_event->table_id);
             add_assoc_string(return_value, "table_name", (char *) _table_map_event->table_name.c_str(), 1);
         }
         break;
@@ -357,10 +358,34 @@ PHP_FUNCTION(binlog_wait_for_next_event)
             add_assoc_string(return_value, "db_name", (char *) _table_map_event->db_name.c_str(), 1);            
             add_assoc_string(return_value, "table_name", (char *) _table_map_event->table_name.c_str(), 1);
 
-            // @TODO: replication ignore dbs
-            if(db != NULL && strcmp(db, (char *) _table_map_event->db_name.c_str())) {
-                break;
+            // replication **watch** dbs
+            if(db_zval_p != NULL) {
+                if(Z_TYPE_P(db_zval_p) == IS_STRING) {
+                    if(strcmp(Z_STRVAL_P(db_zval_p), (char *) _table_map_event->db_name.c_str())) {
+                        break;
+                    }
+                } else if(Z_TYPE_P(db_zval_p) == IS_ARRAY) {
+                    zval **db_pp;
+                    bool db_need_watch = false;
+                    HashPosition array_db_pointer;
+                    for (zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(db_zval_p), &array_db_pointer);
+                         zend_hash_get_current_data_ex(Z_ARRVAL_P(db_zval_p), (void **)&db_pp, &array_db_pointer) == SUCCESS;
+                         zend_hash_move_forward_ex(Z_ARRVAL_P(db_zval_p), &array_db_pointer)) {
+                        if(Z_TYPE_PP(db_pp) != IS_STRING) {
+                            zend_throw_exception(zend_exception_get_default(TSRMLS_C),
+                                                 "Database name should be an array of strings",
+                                                 0 TSRMLS_CC);                            
+                        }
+                        convert_to_string_ex(db_pp);
+                        if(!strcmp(Z_STRVAL_PP(db_pp), (char *) _table_map_event->db_name.c_str())) {
+                            db_need_watch = true;
+                            break;
+                        }
+                    }
+                    if(!db_need_watch) break;              
+                }
             }
+            
             // replication wild **watch** tables
             if(tbl_zval_p != NULL) {
                 if(Z_TYPE_P(tbl_zval_p) == IS_STRING) {
@@ -372,11 +397,11 @@ PHP_FUNCTION(binlog_wait_for_next_event)
                     }
                 } else if(Z_TYPE_P(tbl_zval_p) == IS_ARRAY) {
                     zval **tbl_pp;
-                    bool needWatch = false;
-                    HashPosition array_pointer;
-                    for (zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(tbl_zval_p), &array_pointer);
-                         zend_hash_get_current_data_ex(Z_ARRVAL_P(tbl_zval_p), (void **)&tbl_pp, &array_pointer) == SUCCESS;
-                         zend_hash_move_forward_ex(Z_ARRVAL_P(tbl_zval_p), &array_pointer)) {
+                    bool tbl_need_watch = false;
+                    HashPosition array_tbl_pointer;
+                    for (zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(tbl_zval_p), &array_tbl_pointer);
+                         zend_hash_get_current_data_ex(Z_ARRVAL_P(tbl_zval_p), (void **)&tbl_pp, &array_tbl_pointer) == SUCCESS;
+                         zend_hash_move_forward_ex(Z_ARRVAL_P(tbl_zval_p), &array_tbl_pointer)) {
                         if(Z_TYPE_PP(tbl_pp) != IS_STRING) {
                             zend_throw_exception(zend_exception_get_default(TSRMLS_C),
                                                  "Table name should be an array of strings",
@@ -388,11 +413,11 @@ PHP_FUNCTION(binlog_wait_for_next_event)
                                                 Z_STRLEN_PP(tbl_pp),
                                                 _table_map_event->table_name TSRMLS_CC)) {
                             // printf("find it: %s\n", Z_STRVAL_PP(tbl_pp));
-                            needWatch = true;
+                            tbl_need_watch = true;
                             break;
                         }
                     }
-                    if(!needWatch) break;
+                    if(!tbl_need_watch) break;
                 } else {
                     zend_throw_exception(zend_exception_get_default(TSRMLS_C),
                                          "Only string and array of strings are accepted",
