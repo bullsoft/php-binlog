@@ -315,6 +315,7 @@ PHP_FUNCTION(binlog_wait_for_next_event)
     
     add_assoc_long(return_value, "type_code", event->get_event_type());
     add_assoc_string(return_value, "type_str", (char *)get_event_type_str(event->get_event_type()), 1);
+    add_assoc_long(return_value, "next_position", event->get_next_position());
     
     mysql::Log_event_type event_type = event->get_event_type();
 
