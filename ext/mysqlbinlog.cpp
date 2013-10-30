@@ -251,8 +251,9 @@ void binlog_destruction_handler(zend_rsrc_list_entry *rsrc TSRMLS_DC)
 PHP_FUNCTION(binlog_connect)
 {
     char *arg = NULL;
-    int arg_len;
-    int server_id=1;
+    int   arg_len;
+    // make server_id as long to fix unspecified behaviour in zend_parse_parameters
+    long  server_id = 1;
     Binary_log *bp;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l", &arg, &arg_len, &server_id) == FAILURE) {
@@ -262,7 +263,7 @@ PHP_FUNCTION(binlog_connect)
     if(server_id < 0) {
         server_id = 1;
     }
-    bp->set_server_id(server_id);
+    bp->set_server_id((int)server_id);
     if(bp->connect()) {
         zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Connect to mysql failed", 0 TSRMLS_CC);
     }
