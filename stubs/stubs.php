@@ -82,6 +82,6 @@ function binlog_set_position($link, $position, $filename = null)
  *
  * @return null|int
  */
-function binlog_getPosition($link, $filename = null)
+function binlog_get_position($link, $filename = null)
 {
 }
