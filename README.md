@@ -1,6 +1,10 @@
 PHP Binlog
 ==========
 
+_We have deployed it in produtive enviroment, and I posted an article for it (but in Chinese), http://guweigang.com/blog/2013/11/18/mysql-binlog-in-realtime/. Hope it will help you._
+      
+---------------------------------------
+
 A PHP-Client for mysql replication listener API.
 
 You can use it to connect to a MYSQL server which produces BINLOG, and get BINLOG events in real-time, just like a Async-Trigger.
