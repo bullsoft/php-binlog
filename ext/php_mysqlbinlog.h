@@ -44,6 +44,14 @@ extern "C" {
 #include "TSRM.h"
 #endif
 
+#ifndef PHP_FE_END
+#define PHP_FE_END { NULL, NULL, NULL, 0, 0 }
+#endif
+
+#ifndef ZEND_MOD_END
+#define ZEND_MOD_END { NULL, NULL, NULL, 0 }
+#endif
+
 PHP_MINIT_FUNCTION(mysqlbinlog);
 PHP_MSHUTDOWN_FUNCTION(mysqlbinlog);
 PHP_RINIT_FUNCTION(mysqlbinlog);
