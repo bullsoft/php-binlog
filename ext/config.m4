@@ -1,30 +1,17 @@
 dnl $Id$
 dnl config.m4 for extension mysqlbinlog
 
-dnl Comments in this file start with the string 'dnl'.
-dnl Remove where necessary. This file will not work
-dnl without editing.
+PHP_ARG_WITH(mysql-binlog, for mysql replication listener support,
+[  --with-mysql-binlog=DIR Specify where mysql replication listener is installed])
 
-dnl If your extension references something external, use with:
+if test "$PHP_MYSQL_BINLOG" != "no"; then
 
-PHP_ARG_WITH(mysqlbinlog, for mysqlbinlog support,
-dnl Make sure that the comment is aligned:
-[  --with-mysqlbinlog             Include mysqlbinlog support])
-
-PHP_ARG_WITH(mysql-replication, for mysql replication api support,
-[  --with-mysql-replication=DIR             Include mysql replication api support])
-
-
-if test "$PHP_MYSQLBINLOG" != "no"; then
-  dnl Write more examples of tests here...
-
-  dnl # --with-mysqlbinlog -> check with-path
-  SEARCH_PATH="/usr/local /usr"     # you might want to change this
+  dnl --with-mysql-binlog -> check with-path
+  SEARCH_PATH="/usr/local /usr"
   SEARCH_FOR_REPLICATION="/include/binlog_api.h"
 
-  if test -r $PHP_MYSQL_REPLICATION/$SEARCH_FOR_REPLICATION; then
-    MYSQL_REPLICATION_DIR=$PHP_MYSQL_REPLICATION
-  dnl else search default path list
+  if test -r $PHP_MYSQL_BINLOG/$SEARCH_FOR_REPLICATION; then
+    MYSQL_REPLICATION_DIR=$PHP_MYSQL_BINLOG
   else
     AC_MSG_CHECKING([for mysql-replication-listener libraries in default path])
     for i in $SEARCH_PATH ; do
@@ -34,15 +21,16 @@ if test "$PHP_MYSQLBINLOG" != "no"; then
       fi
     done
   fi
+
   dnl test replication dir
   if test -z "$MYSQL_REPLICATION_DIR"; then
     AC_MSG_RESULT([not found])
-    AC_MSG_ERROR([Please check --with-mysql-replication option])
+    AC_MSG_ERROR([Please ensure that --with-mysql-binlog is really the install prefix for listener])
   fi
 
-  PHP_ADD_INCLUDE($MYSQL_REPLICATION_DIR/include)
-
   PHP_REQUIRE_CXX()
+
+  PHP_ADD_INCLUDE($MYSQL_REPLICATION_DIR/include)
 
   PHP_SUBST(MYSQLBINLOG_SHARED_LIBADD)
   PHP_ADD_LIBRARY(stdc++, 1, MYSQLBINLOG_SHARED_LIBADD)

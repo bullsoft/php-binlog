@@ -30,7 +30,7 @@ Then change to php-binlog ext directory,
 
 $ /home/work/local/php/bin/phpize
 
-$ ./confingure --with-php-config=/home/work/local/php/bin/php-config --with-mysqlbinlog=yes --with-mysql-replication=/home/work/mysql-replication
+$ ./confingure --with-php-config=/home/work/local/php/bin/php-config --with-mysql-binlog=/home/work/mysql-replication
 
 $ make
 
