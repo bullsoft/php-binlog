@@ -15,18 +15,18 @@ Our group use PHP to develop web projects. So if we have a PHP extension to do t
 
 Dependence
 --------------------
-* MySQL Replication Listerner Library (https://github.com/BullSoft/mysql-replication-listener)
+* MySQL Replication Listener Library (https://github.com/BullSoft/mysql-replication-listener)
 * PHP 5.3.X
 
 Install
 --------------------
 First, install mysql-replication-listener.
 
-$ cmake .
+$ cmake . -DCMAKE_INSTALL_PREFIX=/home/work/mysql-replication
 
-$ make
+$ make && make install
 
-Then change to php-binlog ext directory, 
+Then change to php-binlog ext directory,
 
 $ /home/work/local/php/bin/phpize
 
