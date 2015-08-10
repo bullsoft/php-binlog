@@ -17,7 +17,7 @@ Dependence
 --------------------
 * MySQL Replication Listener Library (https://github.com/BullSoft/mysql-replication-listener)
 * PHP 5.3.X
-* MySQL 5.2.X only
+* MySQL 5.4 and lower
 
 Install
 --------------------
