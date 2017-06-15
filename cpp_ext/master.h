@@ -9,8 +9,6 @@
 #pragma once
 
 #include "binlog.h"
-
-
 #include <iostream>
 #include <ostream>
 #include <iomanip>
@@ -28,6 +26,7 @@
 #define MAX_BINLOG_POSITION MAX_BINLOG_SIZE/4
 
 using namespace std;
+using namespace binary_log;
 using binary_log::Binary_log;
 using binary_log::system::create_transport;
 using binary_log::system::Binary_log_driver;
@@ -77,11 +76,10 @@ const char* get_type_str(Log_event_type type)
   case binary_log::HEARTBEAT_LOG_EVENT: return "Heartbeat";
   case binary_log::TRANSACTION_CONTEXT_EVENT: return "Transaction_context";
   case binary_log::VIEW_CHANGE_EVENT: return "View_change";
-    //case binary_log::XA_PREPARE_LOG_EVENT: return "XA_prepare";
+  //case binary_log::XA_PREPARE_LOG_EVENT: return "XA_prepare";
   default: return "Unknown";                            /* impossible */
   }
 }
-
 
 
 /**
@@ -96,6 +94,7 @@ class Master : public Php::Base
 
   Int2event_map m_table_index;
   map<int, string> tid2tname;
+  map<int, vector<string>> tid2tmap;
 
   string dsn;
   string opt_filename;
@@ -116,7 +115,10 @@ class Master : public Php::Base
      *  Destructor
      */
     ~Master() {
-      if(binlog) delete binlog;
+      if(binlog) {
+        binlog->disconnect();
+        delete binlog;
+      }
       if(drv) delete drv;
       if(decode) delete decode;
 
@@ -156,7 +158,7 @@ class Master : public Php::Base
       Php::Value array; // return it
       Binary_log_event *event;
       long event_start_pos;
-      string event_type;
+      //string event_type;
       string database_dot_table;
       map<int, string>::iterator tb_it;
 
@@ -191,8 +193,8 @@ class Master : public Php::Base
       }
 
       array["position"] = static_cast<int64_t>(event_start_pos);
-      array["event_type"] = event->get_event_type();
-      array["event_type_str"] = get_type_str(event->get_event_type());
+      array["type_code"] = event->get_event_type();
+      array["type_str"] = get_type_str(event->get_event_type());
 
       if (event_start_pos >= MAX_BINLOG_POSITION) {
         throw Php::Exception("position exceed max binlog position");
@@ -211,13 +213,23 @@ class Master : public Php::Base
           event->get_event_type() == binary_log::DELETE_ROWS_EVENT_V1
           ) {
         if (event->get_event_type() == binary_log::TABLE_MAP_EVENT) {
+          // It is a table map event
           Table_map_event *table_map_event= static_cast<Table_map_event*>(event);
           database_dot_table = table_map_event->m_dbnam;
           database_dot_table.append(".");
           database_dot_table.append(table_map_event->m_tblnam);
           tid2tname[table_map_event->get_table_id()]= database_dot_table;
+
+          vector<string> dt(2);
+          dt[0] = table_map_event->m_dbnam;
+          dt[1] = table_map_event->m_tblnam;
+          tid2tmap[table_map_event->get_table_id()] = dt;
+
           process_event(table_map_event);
-          array["db"] = database_dot_table;
+
+          //array["db"] = database_dot_table;
+          array["db_name"] = dt[0];
+          array["table_name"] = dt[1];
           return array;
 
         } else {
@@ -230,8 +242,11 @@ class Master : public Php::Base
             if (row_event->get_flags() == Rows_event::STMT_END_F) {
               tid2tname.erase(tb_it);
             }
+            //array["db"] = database_dot_table;
+            array["db_name"] = tid2tmap[tb_it->first][0];
+            array["table_name"] = tid2tmap[tb_it->first][1];
           }
-          array["db"] = database_dot_table;
+
           Row_map rows_val = process_event(row_event);
 
           int j = 0;
@@ -239,17 +254,15 @@ class Master : public Php::Base
               row_it != rows_val.end();
               ++ row_it)
             {
-              Php::Array data;
+              Php::Array row;
               int i = 0;
               for(Row_Fields_map::iterator filed_it = row_it->begin();
                   filed_it != row_it->end();
-                  ++ filed_it)
-                {
-
-                  //std::cout << filed_it->second << "\t";
-                  data[i++] = filed_it->second;
-                }
-              array["data"][j++] = data;
+                  ++ filed_it) {
+                //std::cout << filed_it->second << "\t";
+                row[i++] = filed_it->second;
+              }
+              array["rows"][j++] = row;
               //std::cout << std::endl;
             }
         }
@@ -259,7 +272,7 @@ class Master : public Php::Base
       if (event->get_event_type() == binary_log::QUERY_EVENT) {
         Query_event *qev = dynamic_cast<Query_event *>(event);
         array["query"]  = qev->query;
-        array["db"] = qev->db;
+        array["db_name"] = qev->db;
         /* std::cout << "Query = " */
         /*           << qev->query */
         /*           << " DB = " */
