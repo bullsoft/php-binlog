@@ -43,11 +43,11 @@ while(true) {
             var_dump($event);
             // do what u want ...                           
             break;
-        case WRITE_ROWS_EVENT:
+        case MySqlBinlog::WRITE_ROWS_EVENT:
             var_dump($event);
             // do what u want ...                           
             break;
-        case UPDATE_ROWS_EVENT:
+        case MySqlBinlog::UPDATE_ROWS_EVENT:
             var_dump($event);
             // do what u want ...                           
             break;
