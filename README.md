@@ -17,7 +17,7 @@ Dependence
 --------------------
 * MySQL Replication Listener Library (https://github.com/BullSoft/mysql-replication-listener)
 * PHP 5.3.X
-* MySQL 5.4 and lower
+* MySQL 5.4 and lower,,,  for MySql 5.7, you can checkout the branch `bundle-new-binlog` and install the extension in `cpp_ext`.
 
 Install
 --------------------
