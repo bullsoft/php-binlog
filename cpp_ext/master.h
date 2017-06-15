@@ -129,6 +129,8 @@ class Master : public Php::Base
         }
       } while (++it != m_table_index.end());
 
+      tid2tname.clear();
+      tid2tmap.clear();
     }
 
 
