@@ -1,5 +1,5 @@
 /**
- *  Pinyin.h
+ *  MySqlBinlog.h
  *  Class that is exported to PHP space
  */
 
@@ -9,7 +9,7 @@
 #pragma once
 
 #include "binlog.h"
-#include "MyContentHandler.h"
+
 
 #include <iostream>
 #include <ostream>
@@ -34,6 +34,55 @@ using binary_log::system::Binary_log_driver;
 using binary_log::system::Binlog_file_driver;
 
 typedef std::map<long int, binary_log::Table_map_event *> Int2event_map;
+typedef std::pair<enum_field_types, std::string> Row_Fields_pair;
+typedef std::vector<Row_Fields_pair> Row_Fields_map;
+typedef std::vector<Row_Fields_map> Row_map;
+
+const char* get_type_str(Log_event_type type)
+{
+  switch(type) {
+  case binary_log::START_EVENT_V3:  return "Start_v3";
+  case binary_log::STOP_EVENT:   return "Stop";
+  case binary_log::QUERY_EVENT:  return "Query";
+  case binary_log::ROTATE_EVENT: return "Rotate";
+  case binary_log::INTVAR_EVENT: return "Intvar";
+  case binary_log::LOAD_EVENT:   return "Load";
+  case binary_log::NEW_LOAD_EVENT:   return "New_load";
+  case binary_log::CREATE_FILE_EVENT: return "Create_file";
+  case binary_log::APPEND_BLOCK_EVENT: return "Append_block";
+  case binary_log::DELETE_FILE_EVENT: return "Delete_file";
+  case binary_log::EXEC_LOAD_EVENT: return "Exec_load";
+  case binary_log::RAND_EVENT: return "RAND";
+  case binary_log::XID_EVENT: return "Xid";
+  case binary_log::USER_VAR_EVENT: return "User var";
+  case binary_log::FORMAT_DESCRIPTION_EVENT: return "Format_desc";
+  case binary_log::TABLE_MAP_EVENT: return "Table_map";
+  case binary_log::PRE_GA_WRITE_ROWS_EVENT: return "Write_rows_event_old";
+  case binary_log::PRE_GA_UPDATE_ROWS_EVENT: return "Update_rows_event_old";
+  case binary_log::PRE_GA_DELETE_ROWS_EVENT: return "Delete_rows_event_old";
+  case binary_log::WRITE_ROWS_EVENT_V1: return "Write_rows_v1";
+  case binary_log::UPDATE_ROWS_EVENT_V1: return "Update_rows_v1";
+  case binary_log::DELETE_ROWS_EVENT_V1: return "Delete_rows_v1";
+  case binary_log::BEGIN_LOAD_QUERY_EVENT: return "Begin_load_query";
+  case binary_log::EXECUTE_LOAD_QUERY_EVENT: return "Execute_load_query";
+  case binary_log::INCIDENT_EVENT: return "Incident";
+  case binary_log::IGNORABLE_LOG_EVENT: return "Ignorable";
+  case binary_log::ROWS_QUERY_LOG_EVENT: return "Rows_query";
+  case binary_log::WRITE_ROWS_EVENT: return "Write_rows";
+  case binary_log::UPDATE_ROWS_EVENT: return "Update_rows";
+  case binary_log::DELETE_ROWS_EVENT: return "Delete_rows";
+  case binary_log::GTID_LOG_EVENT: return "Gtid";
+  case binary_log::ANONYMOUS_GTID_LOG_EVENT: return "Anonymous_Gtid";
+  case binary_log::PREVIOUS_GTIDS_LOG_EVENT: return "Previous_gtids";
+  case binary_log::HEARTBEAT_LOG_EVENT: return "Heartbeat";
+  case binary_log::TRANSACTION_CONTEXT_EVENT: return "Transaction_context";
+  case binary_log::VIEW_CHANGE_EVENT: return "View_change";
+    //case binary_log::XA_PREPARE_LOG_EVENT: return "XA_prepare";
+  default: return "Unknown";                            /* impossible */
+  }
+}
+
+
 
 /**
  *  Class definition
@@ -43,27 +92,24 @@ class Master : public Php::Base
  private:
   Decoder *decode;
   Binary_log *binlog;
-  string dsn;
   Binary_log_driver *drv;
 
   Int2event_map m_table_index;
-  int m_table_id;
   map<int, string> tid2tname;
 
-  string filename;
-  long int position;
+  string dsn;
+  string opt_filename;
+  long int opt_position;
+
 
  public:
-
-  Row_Fields_map row_fields_val;
-  Row_map rows_val;
 
     /**
      *  Constructor
      */
     Master()
     {
-      decode = new Decoder(1);
+      decode = new Decoder(0);
     }
 
     /**
@@ -80,6 +126,7 @@ class Master : public Php::Base
           delete it->second;
         }
       } while (++it != m_table_index.end());
+
     }
 
 
@@ -106,14 +153,14 @@ class Master : public Php::Base
     }
 
     Php::Value get_next_event(Php::Parameters &params) {
+      Php::Value array; // return it
       Binary_log_event *event;
       long event_start_pos;
       string event_type;
       string database_dot_table;
-
-      std::pair<unsigned char *, size_t> buffer_buflen;
       map<int, string>::iterator tb_it;
 
+      std::pair<unsigned char *, size_t> buffer_buflen;
       int error_number= drv->get_next_event(&buffer_buflen);
 
       if (error_number == ERR_OK) {
@@ -143,6 +190,10 @@ class Master : public Php::Base
         event_start_pos = (event->header()->log_pos) - (event->header())->data_written;
       }
 
+      array["position"] = static_cast<int64_t>(event_start_pos);
+      array["event_type"] = event->get_event_type();
+      array["event_type_str"] = get_type_str(event->get_event_type());
+
       if (event_start_pos >= MAX_BINLOG_POSITION) {
         throw Php::Exception("position exceed max binlog position");
       }
@@ -166,8 +217,8 @@ class Master : public Php::Base
           database_dot_table.append(table_map_event->m_tblnam);
           tid2tname[table_map_event->get_table_id()]= database_dot_table;
           process_event(table_map_event);
-
-          return 0;
+          array["db"] = database_dot_table;
+          return array;
 
         } else {
           // It is a row event
@@ -180,40 +231,46 @@ class Master : public Php::Base
               tid2tname.erase(tb_it);
             }
           }
+          array["db"] = database_dot_table;
+          Row_map rows_val = process_event(row_event);
 
-          process_event(row_event);
-
+          int j = 0;
           for(Row_map::iterator row_it = rows_val.begin();
               row_it != rows_val.end();
               ++ row_it)
             {
+              Php::Array data;
+              int i = 0;
               for(Row_Fields_map::iterator filed_it = row_it->begin();
                   filed_it != row_it->end();
                   ++ filed_it)
                 {
-                  std::cout << filed_it->second << "\t";
-                }
-              std::cout << std::endl;
-            }
-          std::cout << std::endl;
 
+                  //std::cout << filed_it->second << "\t";
+                  data[i++] = filed_it->second;
+                }
+              array["data"][j++] = data;
+              //std::cout << std::endl;
+            }
         }
 
       }
 
       if (event->get_event_type() == binary_log::QUERY_EVENT) {
-        binary_log::Query_event *qev = dynamic_cast<binary_log::Query_event *>(event);
-        std::cout << "Query = "
-                  << qev->query
-                  << " DB = "
-                  << qev->db
-                  << std::endl;
+        Query_event *qev = dynamic_cast<Query_event *>(event);
+        array["query"]  = qev->query;
+        array["db"] = qev->db;
+        /* std::cout << "Query = " */
+        /*           << qev->query */
+        /*           << " DB = " */
+        /*           << qev->db */
+        /*           << std::endl; */
       }
 
       delete event;
       event = NULL;
 
-      return 0;
+      return array;
 
     }
 
@@ -227,25 +284,23 @@ class Master : public Php::Base
         return "MySQL Binlog for PHP. Made by BullSoft.org";
     }
 
-    Binary_log_event* process_event(Table_map_event *tm)
+    void process_event(Table_map_event *tm)
     {
-      m_table_id = tm->get_table_id();
       m_table_index.insert(Int2event_map::value_type(tm->get_table_id(), tm));
-      return 0;
     }
 
-    Binary_log_event* process_event(Rows_event *event)
+    Row_map process_event(Rows_event *event)
     {
-      rows_val.clear();
+      Row_map rows_val;
       Int2event_map::iterator ti_it= m_table_index.find(event->get_table_id());
       if (ti_it != m_table_index.end()) {
         Row_event_set rows(event, ti_it->second);
         Row_event_set::iterator row_it = rows.begin();
         do {
-          row_fields_val.clear();
-          binary_log::Row_of_fields fields = *row_it;
-          binary_log::Row_of_fields::iterator field_it = fields.begin();
-          binary_log::Converter converter;
+          Row_Fields_map row_fields_val;
+          Row_of_fields fields = *row_it;
+          Row_of_fields::iterator field_it = fields.begin();
+          Converter converter;
           if (field_it != fields.end()) {
             do {
               std::string str;
@@ -259,8 +314,8 @@ class Master : public Php::Base
           rows_val.push_back(row_fields_val);
         } while (++row_it != rows.end());
 
-      } //end if
-      return event;
+      }
+      return rows_val;
     }
 };
 
