@@ -17,7 +17,7 @@ Dependence
 --------------------
 * MySQL Binlog Events Library (https://github.com/bullsoft/mysql-binlog-events)
 * PHP 5/7: Support by PHP-CPP
-* MySQL 5.7 or lower
+* MySQL 5.7
 * PHP-CPP: A Zend API Wrapper in C++ (https://github.com/CopernicaMarketingSoftware/PHP-CPP)
 
 Install
