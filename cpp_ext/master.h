@@ -93,7 +93,7 @@ class Master : public Php::Base
   Binary_log_driver *drv;
 
   Int2event_map m_table_index;
-  map<int, string> tid2tname;
+  //map<int, string> tid2tname;
   map<int, vector<string>> tid2tmap;
 
   string dsn;
@@ -129,7 +129,7 @@ class Master : public Php::Base
         }
       } while (++it != m_table_index.end());
 
-      tid2tname.clear();
+      //tid2tname.clear();
       tid2tmap.clear();
     }
 
@@ -161,8 +161,9 @@ class Master : public Php::Base
       Binary_log_event *event;
       long event_start_pos;
       //string event_type;
-      string database_dot_table;
-      map<int, string>::iterator tb_it;
+      //string database_dot_table;
+      //map<int, string>::iterator tb_it;
+      map<int, vector<string>>::iterator tb_it;
 
       std::pair<unsigned char *, size_t> buffer_buflen;
       int error_number= drv->get_next_event(&buffer_buflen);
@@ -217,19 +218,13 @@ class Master : public Php::Base
         if (event->get_event_type() == binary_log::TABLE_MAP_EVENT) {
           // It is a table map event
           Table_map_event *table_map_event= static_cast<Table_map_event*>(event);
-          database_dot_table = table_map_event->m_dbnam;
-          database_dot_table.append(".");
-          database_dot_table.append(table_map_event->m_tblnam);
-          tid2tname[table_map_event->get_table_id()]= database_dot_table;
+          process_event(table_map_event);
 
           vector<string> dt(2);
           dt[0] = table_map_event->m_dbnam;
           dt[1] = table_map_event->m_tblnam;
           tid2tmap[table_map_event->get_table_id()] = dt;
 
-          process_event(table_map_event);
-
-          //array["db"] = database_dot_table;
           array["db_name"] = dt[0];
           array["table_name"] = dt[1];
           return array;
@@ -237,19 +232,22 @@ class Master : public Php::Base
         } else {
           // It is a row event
           Rows_event *row_event= static_cast<Rows_event*>(event);
-          tb_it= tid2tname.begin();
-          tb_it= tid2tname.find(row_event->get_table_id());
-          if (tb_it != tid2tname.end()) {
-            database_dot_table= tb_it->second;
-            if (row_event->get_flags() == Rows_event::STMT_END_F) {
-              tid2tname.erase(tb_it);
-            }
-            //array["db"] = database_dot_table;
-            array["db_name"] = tid2tmap[tb_it->first][0];
-            array["table_name"] = tid2tmap[tb_it->first][1];
-          }
-
           Row_map rows_val = process_event(row_event);
+
+          tb_it= tid2tmap.begin();
+          tb_it= tid2tmap.find(row_event->get_table_id());
+          if (tb_it != tid2tmap.end()) {
+            array["db_name"] = tb_it->second[0];
+            array["table_name"] = tb_it->second[1];
+            if (row_event->get_flags() == Rows_event::STMT_END_F) {
+              std::cout << "IN STMT_END_F" << std::endl;
+              tid2tmap.erase(tb_it);
+              if(m_table_index[tb_it->first] != NULL) {
+                delete m_table_index[tb_it->first];
+              }
+              m_table_index.erase(tb_it->first);
+            }
+          }
 
           int j = 0;
           for(Row_map::iterator row_it = rows_val.begin();
@@ -261,11 +259,9 @@ class Master : public Php::Base
               for(Row_Fields_map::iterator filed_it = row_it->begin();
                   filed_it != row_it->end();
                   ++ filed_it) {
-                //std::cout << filed_it->second << "\t";
                 row[i++] = filed_it->second;
               }
               array["rows"][j++] = row;
-              //std::cout << std::endl;
             }
         }
 
